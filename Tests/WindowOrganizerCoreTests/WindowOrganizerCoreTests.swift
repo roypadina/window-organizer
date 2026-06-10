@@ -15,10 +15,10 @@ struct WindowOrganizerCoreTests {
 
     @Test("shortcut validation rejects missing key and modifiers")
     func shortcutValidation() {
-        #expect(KeyboardShortcut(key: "", modifiers: [.command]).isValid == false)
-        #expect(KeyboardShortcut(key: "M", modifiers: []).isValid == false)
-        #expect(KeyboardShortcut(key: "M", modifiers: [.command, .option]).isValid)
-        #expect(KeyboardShortcut(key: "m", modifiers: [.command]).displayString == "⌘M")
+        #expect(OrganizerShortcut(key: "", modifiers: [.command]).isValid == false)
+        #expect(OrganizerShortcut(key: "M", modifiers: []).isValid == false)
+        #expect(OrganizerShortcut(key: "M", modifiers: [.command, .option]).isValid)
+        #expect(OrganizerShortcut(key: "m", modifiers: [.command]).displayString == "⌘M")
     }
 
     @Test("default exclusions skip system and protected apps")

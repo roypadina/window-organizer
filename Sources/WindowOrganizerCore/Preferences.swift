@@ -1,7 +1,7 @@
 import Foundation
 
 public struct OrganizerPreferences: Codable, Equatable, Sendable {
-    public var shortcuts: [OrganizerAction: KeyboardShortcut]
+    public var shortcuts: [OrganizerAction: OrganizerShortcut]
     public var scope: ActionScope
     public var launchAtLoginEnabled: Bool
     public var forceQuitRequiresConfirmation: Bool
@@ -9,7 +9,7 @@ public struct OrganizerPreferences: Codable, Equatable, Sendable {
     public var excludedBundleIdentifiers: Set<String>
 
     public init(
-        shortcuts: [OrganizerAction: KeyboardShortcut],
+        shortcuts: [OrganizerAction: OrganizerShortcut],
         scope: ActionScope,
         launchAtLoginEnabled: Bool,
         forceQuitRequiresConfirmation: Bool,
@@ -26,10 +26,10 @@ public struct OrganizerPreferences: Codable, Equatable, Sendable {
 
     public static let defaults = OrganizerPreferences(
         shortcuts: [
-            .minimizeAllWindows: KeyboardShortcut(key: "M", modifiers: [.command, .option, .control]),
-            .closeAllWindows: KeyboardShortcut(key: "W", modifiers: [.command, .option, .control]),
-            .quitApps: KeyboardShortcut(key: "Q", modifiers: [.command, .option, .control]),
-            .forceQuitApps: KeyboardShortcut(key: "Q", modifiers: [.command, .option, .control, .shift])
+            .minimizeAllWindows: OrganizerShortcut(key: "M", modifiers: [.command, .option, .control]),
+            .closeAllWindows: OrganizerShortcut(key: "W", modifiers: [.command, .option, .control]),
+            .quitApps: OrganizerShortcut(key: "Q", modifiers: [.command, .option, .control]),
+            .forceQuitApps: OrganizerShortcut(key: "Q", modifiers: [.command, .option, .control, .shift])
         ],
         scope: .currentVisibleContext,
         launchAtLoginEnabled: false,
