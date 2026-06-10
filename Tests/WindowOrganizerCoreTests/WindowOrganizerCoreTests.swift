@@ -83,4 +83,11 @@ struct WindowOrganizerCoreTests {
         #expect(policy.requiresConfirmation(for: .closeAllWindows) == false)
         #expect(policy.requiresConfirmation(for: .minimizeAllWindows) == false)
     }
+
+    @Test("settings window uses compact top aligned layout")
+    func settingsWindowLayoutIsCompact() {
+        #expect(SettingsLayoutMetrics.windowMinimumHeight <= 340)
+        #expect(SettingsLayoutMetrics.headerPadding == 12)
+        #expect(SettingsLayoutMetrics.contentPadding == 16)
+    }
 }

@@ -14,7 +14,7 @@ struct SettingsView: View {
             }
             .pickerStyle(.segmented)
             .labelsHidden()
-            .padding()
+            .padding(SettingsLayoutMetrics.headerPadding)
 
             Divider()
 
@@ -30,7 +30,9 @@ struct SettingsView: View {
                     GeneralSettingsView(controller: controller)
                 }
             }
-            .padding()
+            .padding(SettingsLayoutMetrics.contentPadding)
+
+            Spacer(minLength: 0)
         }
     }
 }
