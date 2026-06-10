@@ -9,6 +9,7 @@ DIST_DIR="$ROOT_DIR/dist"
 APP_DIR="$DIST_DIR/$APP_NAME.app"
 CONTENTS_DIR="$APP_DIR/Contents"
 MACOS_DIR="$CONTENTS_DIR/MacOS"
+SIGNING_IDENTITY="${CODE_SIGN_IDENTITY:-}"
 
 cd "$ROOT_DIR"
 
@@ -50,6 +51,19 @@ PLIST
 
 chmod +x "$MACOS_DIR/$APP_NAME"
 
-codesign --force --deep --sign - --identifier "$BUNDLE_ID" "$APP_DIR"
+if [[ -z "$SIGNING_IDENTITY" ]]; then
+    SIGNING_IDENTITY="$(
+        security find-identity -v -p codesigning 2>/dev/null \
+            | awk -F '"' '/valid identities found/ { next } /".+"/ { print $2; exit }'
+    )"
+fi
+
+if [[ -n "$SIGNING_IDENTITY" ]]; then
+    codesign --force --deep --sign "$SIGNING_IDENTITY" --identifier "$BUNDLE_ID" "$APP_DIR"
+else
+    echo "warning: no code-signing identity found; falling back to ad hoc signing" >&2
+    echo "warning: macOS Accessibility permission may reset after rebuilds" >&2
+    codesign --force --deep --sign - --identifier "$BUNDLE_ID" "$APP_DIR"
+fi
 
 echo "$APP_DIR"
