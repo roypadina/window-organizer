@@ -50,4 +50,6 @@ PLIST
 
 chmod +x "$MACOS_DIR/$APP_NAME"
 
+codesign --force --deep --sign - --identifier "$BUNDLE_ID" "$APP_DIR"
+
 echo "$APP_DIR"
