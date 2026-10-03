@@ -1,6 +1,7 @@
 import AppKit
 import ApplicationServices
 import Foundation
+import os
 
 protocol PermissionsHelping {
     var isAccessibilityTrusted: Bool { get }
@@ -10,7 +11,10 @@ protocol PermissionsHelping {
 
 struct PermissionsHelper: PermissionsHelping {
     var isAccessibilityTrusted: Bool {
-        AXIsProcessTrusted()
+        let trusted = AXIsProcessTrusted()
+        Logger(subsystem: "com.padina.window-organizer", category: "permissions")
+            .info("Accessibility trusted: \(trusted, privacy: .public), path: \(Bundle.main.bundlePath, privacy: .public)")
+        return trusted
     }
 
     func openAccessibilitySettings() {

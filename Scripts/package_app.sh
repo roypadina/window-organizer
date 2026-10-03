@@ -11,7 +11,8 @@ CONTENTS_DIR="$APP_DIR/Contents"
 MACOS_DIR="$CONTENTS_DIR/MacOS"
 RESOURCES_DIR="$CONTENTS_DIR/Resources"
 SIGNING_IDENTITY="${CODE_SIGN_IDENTITY:-}"
-# RELEASE=1: ad-hoc signed app + dist/Window-Organizer.zip for GitHub Releases and the Homebrew cask.
+# RELEASE=1: also zip the app into dist/Window-Organizer.zip for GitHub Releases and the Homebrew cask.
+# Sign releases with the same stable identity: macOS ties the Accessibility grant to it, so it survives updates.
 RELEASE="${RELEASE:-}"
 
 cd "$ROOT_DIR"
@@ -57,7 +58,7 @@ PLIST
 
 chmod +x "$MACOS_DIR/$APP_NAME"
 
-if [[ -z "$SIGNING_IDENTITY" && -z "$RELEASE" ]]; then
+if [[ -z "$SIGNING_IDENTITY" ]]; then
     SIGNING_IDENTITY="$(
         security find-identity -v -p codesigning 2>/dev/null \
             | awk -F '"' '/valid identities found/ { next } /".+"/ { print $2; exit }'
@@ -67,10 +68,8 @@ fi
 if [[ -n "$SIGNING_IDENTITY" ]]; then
     codesign --force --deep --sign "$SIGNING_IDENTITY" --identifier "$BUNDLE_ID" "$APP_DIR"
 else
-    [[ -n "$RELEASE" ]] || {
-        echo "warning: no code-signing identity found; falling back to ad hoc signing" >&2
-        echo "warning: macOS Accessibility permission may reset after rebuilds" >&2
-    }
+    echo "warning: no code-signing identity found; falling back to ad hoc signing" >&2
+    echo "warning: macOS Accessibility permission may reset after rebuilds" >&2
     codesign --force --deep --sign - --identifier "$BUNDLE_ID" "$APP_DIR"
 fi
 
