@@ -7,7 +7,7 @@ struct WindowOrganizerApp: App {
     @StateObject private var controller = AppController()
 
     var body: some Scene {
-        MenuBarExtra("Window Organizer", systemImage: "rectangle.3.group") {
+        MenuBarExtra {
             Button(OrganizerAction.minimizeAllWindows.title) {
                 controller.perform(.minimizeAllWindows)
             }
@@ -38,6 +38,8 @@ struct WindowOrganizerApp: App {
             Button("Quit Window Organizer") {
                 NSApplication.shared.terminate(nil)
             }
+        } label: {
+            Image(nsImage: Self.menuBarIcon)
         }
 
         Settings {
@@ -49,6 +51,18 @@ struct WindowOrganizerApp: App {
                 )
         }
     }
+}
+
+extension WindowOrganizerApp {
+    /// Template image bundled by Scripts/package_app.sh; `swift run` has no bundle resources, so it falls back to an SF Symbol.
+    static let menuBarIcon: NSImage = {
+        let image = NSImage(named: "menubar")
+            ?? NSImage(systemSymbolName: "rectangle.3.group", accessibilityDescription: nil)
+            ?? NSImage()
+        image.isTemplate = true
+        image.accessibilityDescription = "Window Organizer"
+        return image
+    }()
 }
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
