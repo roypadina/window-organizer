@@ -44,11 +44,6 @@ struct WindowOrganizerApp: App {
 
         Settings {
             SettingsView(controller: controller)
-                .frame(
-                    minWidth: SettingsLayoutMetrics.windowMinimumWidth,
-                    minHeight: SettingsLayoutMetrics.windowMinimumHeight,
-                    alignment: .top
-                )
         }
     }
 }

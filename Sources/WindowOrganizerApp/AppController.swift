@@ -8,12 +8,21 @@ final class AppController: ObservableObject {
     @Published var preferences: OrganizerPreferences {
         didSet {
             preferencesStore.save(preferences)
-            shortcutManager?.updateShortcuts(preferences.shortcuts)
+            if recordingAction == nil {
+                shortcutManager?.updateShortcuts(preferences.shortcuts)
+            }
             setLaunchAtLogin(preferences.launchAtLoginEnabled)
         }
     }
 
-    @Published private(set) var permissionStatus: String
+    @Published private(set) var isAccessibilityGranted: Bool
+    /// The action whose shortcut is being recorded. Global hot keys are paused meanwhile,
+    /// so pressing the current combo is captured instead of firing the action.
+    @Published var recordingAction: OrganizerAction? {
+        didSet {
+            shortcutManager?.updateShortcuts(recordingAction == nil ? preferences.shortcuts : [:])
+        }
+    }
     @Published var statusMessage: String = "Ready"
 
     private let preferencesStore: PreferencesPersisting
@@ -35,7 +44,7 @@ final class AppController: ObservableObject {
 
         let loadedPreferences = preferencesStore.load()
         preferences = loadedPreferences
-        permissionStatus = permissionsHelper.isAccessibilityTrusted ? "Granted" : "Missing"
+        isAccessibilityGranted = permissionsHelper.isAccessibilityTrusted
         shortcutManager = GlobalShortcutManager { [weak self] action in
             self?.perform(action)
         }
@@ -64,7 +73,14 @@ final class AppController: ObservableObject {
     }
 
     func refreshPermissions() {
-        permissionStatus = permissionsHelper.isAccessibilityTrusted ? "Granted" : "Missing"
+        isAccessibilityGranted = permissionsHelper.isAccessibilityTrusted
+    }
+
+    /// macOS shows its prompt only once per signature, so also open the pane for repeat clicks.
+    func grantAccessibility() {
+        permissionsHelper.requestAccessibilityPermissionPrompt()
+        permissionsHelper.openAccessibilitySettings()
+        refreshPermissions()
     }
 
     func openAccessibilitySettings() {

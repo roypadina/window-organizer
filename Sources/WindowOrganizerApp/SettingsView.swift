@@ -3,110 +3,47 @@ import WindowOrganizerCore
 
 struct SettingsView: View {
     @ObservedObject var controller: AppController
-    @State private var selectedTab: SettingsTab = .shortcuts
 
     var body: some View {
-        VStack(spacing: 0) {
-            Picker("Settings", selection: $selectedTab) {
-                ForEach(SettingsTab.allCases) { tab in
-                    Text(tab.title).tag(tab)
-                }
-            }
-            .pickerStyle(.segmented)
-            .labelsHidden()
-            .padding(SettingsLayoutMetrics.headerPadding)
-
-            Divider()
-
-            Group {
-                switch selectedTab {
-                case .shortcuts:
-                    ShortcutsSettingsView(preferences: $controller.preferences)
-                case .behavior:
-                    BehaviorSettingsView(preferences: $controller.preferences)
-                case .apps:
-                    AppsSettingsView(controller: controller)
-                case .general:
-                    GeneralSettingsView(controller: controller)
-                }
-            }
-            .padding(SettingsLayoutMetrics.contentPadding)
-
-            Spacer(minLength: 0)
+        TabView {
+            ShortcutsSettingsView(controller: controller)
+                .tabItem { Label("Shortcuts", systemImage: "keyboard") }
+            BehaviorSettingsView(preferences: $controller.preferences)
+                .tabItem { Label("Behavior", systemImage: "slider.horizontal.3") }
+            AppsSettingsView(controller: controller)
+                .tabItem { Label("Apps", systemImage: "macwindow.on.rectangle") }
+            GeneralSettingsView(controller: controller)
+                .tabItem { Label("General", systemImage: "gearshape") }
         }
-    }
-}
-
-private enum SettingsTab: String, CaseIterable, Identifiable {
-    case shortcuts
-    case behavior
-    case apps
-    case general
-
-    var id: String { rawValue }
-
-    var title: String {
-        switch self {
-        case .shortcuts: "Shortcuts"
-        case .behavior: "Behavior"
-        case .apps: "Apps"
-        case .general: "General"
-        }
+        .frame(width: SettingsLayoutMetrics.windowWidth)
     }
 }
 
 private struct ShortcutsSettingsView: View {
-    @Binding var preferences: OrganizerPreferences
+    @ObservedObject var controller: AppController
+    @State private var hint: String?
 
     var body: some View {
         Form {
-            ForEach(OrganizerAction.allCases) { action in
-                ShortcutEditor(
-                    title: action.title,
-                    shortcut: Binding(
-                        get: { preferences.shortcuts[action] ?? .init(key: "", modifiers: []) },
-                        set: { preferences.shortcuts[action] = $0 }
-                    )
-                )
-            }
-        }
-    }
-}
-
-private struct ShortcutEditor: View {
-    let title: String
-    @Binding var shortcut: OrganizerShortcut
-
-    var body: some View {
-        HStack(alignment: .firstTextBaseline) {
-            Text(title)
-                .frame(width: 170, alignment: .leading)
-
-            TextField("Key", text: Binding(
-                get: { shortcut.key },
-                set: { shortcut.key = String($0.prefix(1)).uppercased() }
-            ))
-            .textFieldStyle(.roundedBorder)
-            .frame(width: 60)
-
-            ForEach(ShortcutModifier.allCases, id: \.self) { modifier in
-                Toggle(modifier.symbol, isOn: Binding(
-                    get: { shortcut.modifiers.contains(modifier) },
-                    set: { enabled in
-                        if enabled {
-                            shortcut.modifiers.insert(modifier)
-                        } else {
-                            shortcut.modifiers.remove(modifier)
-                        }
+            Section {
+                ForEach(OrganizerAction.allCases) { action in
+                    LabeledContent(action.title) {
+                        ShortcutRecorder(action: action, controller: controller, hint: $hint)
                     }
-                ))
-                .toggleStyle(.button)
+                }
+            } footer: {
+                Text(hint ?? "Click a shortcut and press the new keys. Esc cancels, Delete removes it.")
+                    .foregroundStyle(hint == nil ? Color.secondary : Color.red)
             }
 
-            Text(shortcut.isValid ? shortcut.displayString : "Invalid")
-                .foregroundStyle(shortcut.isValid ? Color.secondary : Color.red)
-                .frame(minWidth: 90, alignment: .leading)
+            Section {
+                Button("Restore Defaults") {
+                    controller.preferences.shortcuts = OrganizerPreferences.defaults.shortcuts
+                    hint = nil
+                }
+            }
         }
+        .formStyle(.grouped)
     }
 }
 
@@ -115,15 +52,19 @@ private struct BehaviorSettingsView: View {
 
     var body: some View {
         Form {
-            Picker("Action scope", selection: $preferences.scope) {
-                ForEach(ActionScope.allCases) { scope in
-                    Text(scope.title).tag(scope)
+            Section {
+                Picker("Action scope", selection: $preferences.scope) {
+                    ForEach(ActionScope.allCases) { scope in
+                        Text(scope.title).tag(scope)
+                    }
                 }
+                .pickerStyle(.radioGroup)
+            } footer: {
+                Text("All Spaces and displays is best effort: macOS has no public API for Spaces. Force Quit Apps always asks for confirmation.")
+                    .foregroundStyle(.secondary)
             }
-
-            Toggle("Confirm before force quit", isOn: $preferences.forceQuitRequiresConfirmation)
-                .disabled(true)
         }
+        .formStyle(.grouped)
     }
 }
 
@@ -136,14 +77,9 @@ private struct AppsSettingsView: View {
         let resolver = controller.targetResolver()
         let apps = filter.apply(to: allApps, resolver: resolver)
 
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                TextField("Search", text: $filter.query, prompt: Text("Search name or bundle ID"))
-                    .textFieldStyle(.roundedBorder)
-                Button("Refresh") {
-                    controller.objectWillChange.send()
-                }
-            }
+        VStack(alignment: .leading, spacing: 10) {
+            TextField("Search", text: $filter.query, prompt: Text("Search name or bundle ID"))
+                .textFieldStyle(.roundedBorder)
 
             HStack {
                 Picker("Kind", selection: $filter.kind) {
@@ -186,10 +122,13 @@ private struct AppsSettingsView: View {
                             Text(state.title).tag(state)
                         }
                     }
+                    .pickerStyle(.menu)
                     .labelsHidden()
-                    .frame(width: 130)
+                    .frame(width: 110)
                 }
             }
+            .alternatingRowBackgrounds()
+            .frame(minHeight: SettingsLayoutMetrics.appsListMinHeight)
             .overlay {
                 if apps.isEmpty {
                     Text("No matching apps")
@@ -197,10 +136,17 @@ private struct AppsSettingsView: View {
                 }
             }
 
-            Text("Showing \(apps.count) of \(allApps.count) running")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            HStack {
+                Text("Showing \(apps.count) of \(allApps.count) running")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Button("Refresh") {
+                    controller.objectWillChange.send()
+                }
+            }
         }
+        .padding()
     }
 }
 
@@ -209,34 +155,43 @@ private struct GeneralSettingsView: View {
 
     var body: some View {
         Form {
-            Toggle("Launch at Login", isOn: $controller.preferences.launchAtLoginEnabled)
-
-            HStack {
-                Text("Accessibility")
-                Spacer()
-                Text(controller.permissionStatus)
-                    .foregroundStyle(controller.permissionStatus == "Granted" ? .green : .red)
-                Button("Request") {
-                    controller.requestAccessibilityPermissionPrompt()
-                }
-                Button("Open Settings") {
-                    controller.openAccessibilitySettings()
-                }
+            Section("Startup") {
+                Toggle("Launch at Login", isOn: $controller.preferences.launchAtLoginEnabled)
             }
 
-            HStack {
-                Text("Bundle Identifier")
-                Spacer()
-                Text("com.padina.window-organizer")
+            Section {
+                LabeledContent("Accessibility") {
+                    if controller.isAccessibilityGranted {
+                        Label("Granted", systemImage: "checkmark.circle.fill")
+                            .foregroundStyle(.green)
+                    } else {
+                        HStack {
+                            Label("Not granted", systemImage: "exclamationmark.triangle.fill")
+                                .foregroundStyle(.orange)
+                            Button("Grant Access…") {
+                                controller.grantAccessibility()
+                            }
+                        }
+                    }
+                }
+            } header: {
+                Text("Permissions")
+            } footer: {
+                Text("Needed for Minimize and Close. Quit and Force Quit work without it.")
                     .foregroundStyle(.secondary)
             }
 
-            HStack {
-                Text("Status")
-                Spacer()
-                Text(controller.statusMessage)
-                    .foregroundStyle(.secondary)
+            Section("Status") {
+                LabeledContent("Last action") {
+                    Text(controller.statusMessage)
+                        .foregroundStyle(.secondary)
+                }
             }
+        }
+        .formStyle(.grouped)
+        .onAppear { controller.refreshPermissions() }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            controller.refreshPermissions()
         }
     }
 }

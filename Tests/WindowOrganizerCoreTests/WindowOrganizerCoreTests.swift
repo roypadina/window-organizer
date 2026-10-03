@@ -1,3 +1,4 @@
+import Foundation
 import Testing
 @testable import WindowOrganizerCore
 
@@ -84,11 +85,47 @@ struct WindowOrganizerCoreTests {
         #expect(policy.requiresConfirmation(for: .minimizeAllWindows) == false)
     }
 
-    @Test("settings window uses compact top aligned layout")
-    func settingsWindowLayoutIsCompact() {
-        #expect(SettingsLayoutMetrics.windowMinimumHeight <= 340)
-        #expect(SettingsLayoutMetrics.headerPadding == 12)
-        #expect(SettingsLayoutMetrics.contentPadding == 16)
+    @Test("shortcuts saved before key codes still decode")
+    func legacyShortcutJSONDecodes() throws {
+        let json = #"{"key":"M","modifiers":["command","option","control"]}"#
+        let shortcut = try JSONDecoder().decode(OrganizerShortcut.self, from: Data(json.utf8))
+        #expect(shortcut.keyCode == 0x2E)
+        #expect(shortcut.isValid)
+
+        let digit = try JSONDecoder().decode(OrganizerShortcut.self, from: Data(#"{"key":"1","modifiers":["command"]}"#.utf8))
+        #expect(digit.keyCode == nil)
+        #expect(digit.isValid == false)
+    }
+
+    @Test("saved preferences round-trip and keep key codes")
+    func preferencesRoundTrip() throws {
+        var preferences = OrganizerPreferences.defaults
+        preferences.shortcuts[.minimizeAllWindows] = OrganizerShortcut(key: "F5", modifiers: [], keyCode: 0x60)
+        preferences.includedBundleIdentifiers = ["com.apple.finder"]
+        let decoded = try JSONDecoder().decode(OrganizerPreferences.self, from: JSONEncoder().encode(preferences))
+        #expect(decoded == preferences)
+        #expect(decoded.shortcuts[.minimizeAllWindows]?.keyCode == 0x60)
+    }
+
+    @Test("shortcut validation allows lone function keys only")
+    func shortcutValidationRules() {
+        #expect(OrganizerShortcut(key: "F5", modifiers: [], keyCode: 0x60).isValid)
+        #expect(OrganizerShortcut(key: "M", modifiers: [.shift]).isValid == false)
+        #expect(OrganizerShortcut(key: "M", modifiers: [.command]).isValid)
+        #expect(OrganizerShortcut(key: "←", modifiers: [.option], keyCode: 0x7B).isValid)
+        #expect(OrganizerShortcut(key: "←", modifiers: [.option, .command], keyCode: 0x7B).displayString == "⌥⌘←")
+        #expect(OrganizerShortcut.specialKeyLabels[0x31] == "Space")
+        #expect(OrganizerShortcut.functionKeyLabels.count == 20)
+        #expect(OrganizerPreferences.defaults.shortcuts.values.allSatisfy { $0.keyCode != nil })
+    }
+
+    @Test("conflicting shortcuts are detected between actions")
+    func shortcutConflicts() {
+        let preferences = OrganizerPreferences.defaults
+        let quit = OrganizerShortcut(key: "Q", modifiers: [.command, .option, .control])
+        #expect(preferences.conflictingAction(for: quit, excluding: .forceQuitApps) == .quitApps)
+        #expect(preferences.conflictingAction(for: quit, excluding: .quitApps) == nil)
+        #expect(preferences.conflictingAction(for: OrganizerShortcut(key: "Q", modifiers: [.command]), excluding: .forceQuitApps) == nil)
     }
 
     @Test("app list filter combines search, status, developer and kind")

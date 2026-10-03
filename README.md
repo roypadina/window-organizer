@@ -63,7 +63,7 @@ unzip it and move `Window Organizer.app` to `/Applications`.
 Minimize and close use the macOS Accessibility API, so they need permission (quit and force quit do not):
 
 1. Click the Window Organizer menu bar icon → **Settings…** → **General**.
-2. Click **Request** (or **Open Settings**) next to Accessibility.
+2. Click **Grant Access…** next to Accessibility.
 3. Turn on **Window Organizer** in System Settings → Privacy & Security → Accessibility.
 
 The ad-hoc signature changes with every update, so after an update you may need to turn the
@@ -82,7 +82,7 @@ tccutil reset Accessibility com.padina.window-organizer
 | `⌃⌥⌘Q` | Quit apps |
 | `⌃⌥⌘⇧Q` | Force quit apps (asks first) |
 
-Change them in **Settings… → Shortcuts**: pick a key and the modifiers for each action.
+Change them in **Settings… → Shortcuts**: click a shortcut and press the new keys (any key with ⌘, ⌃ or ⌥; F-keys work alone). Esc cancels, Delete removes it.
 The same actions are in the menu bar menu.
 
 ## Limitations
@@ -90,7 +90,7 @@ The same actions are in the menu bar menu.
 - **Current visible context is best effort.** macOS has no public API for full Space-level window control.
 - Minimize and close only reach windows that apps expose through Accessibility.
 - Quit can be interrupted by save dialogs and app confirmations; Window Organizer does not bypass them.
-- **Force quit discards unsaved work.** Confirmation is on by default (Settings → Behavior).
+- **Force quit discards unsaved work.** It always asks for confirmation first.
 - Some system and protected processes can't be quit.
 - Not notarized (see [Install](#install)).
 
