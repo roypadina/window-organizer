@@ -27,13 +27,28 @@ private struct ShortcutsSettingsView: View {
         Form {
             Section {
                 ForEach(OrganizerAction.allCases) { action in
-                    LabeledContent(action.title) {
+                    LabeledContent {
                         ShortcutRecorder(action: action, controller: controller, hint: $hint)
+                    } label: {
+                        HStack(spacing: 6) {
+                            Text(action.title)
+                            if controller.unavailableShortcuts.contains(action) {
+                                Image(systemName: "exclamationmark.triangle.fill")
+                                    .foregroundStyle(.orange)
+                                    .help("macOS refused this shortcut: another app already uses it. Record a different one.")
+                            }
+                        }
                     }
                 }
             } footer: {
-                Text(hint ?? "Click a shortcut and press the new keys. Esc cancels, Delete removes it.")
-                    .foregroundStyle(hint == nil ? Color.secondary : Color.red)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(hint ?? "Click a shortcut and press the new keys. Esc cancels, Delete removes it.")
+                        .foregroundStyle(hint == nil ? Color.secondary : Color.red)
+                    if !controller.unavailableShortcuts.isEmpty {
+                        Text("⚠︎ marks a shortcut another app already uses; it won't work until you change it.")
+                            .foregroundStyle(.orange)
+                    }
+                }
             }
 
             Section {
@@ -142,15 +157,9 @@ private struct AppsSettingsView: View {
                 }
             }
 
-            HStack {
-                Text("Showing \(apps.count) of \(allApps.count) running")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                Spacer()
-                Button("Refresh") {
-                    controller.objectWillChange.send()
-                }
-            }
+            Text("Showing \(apps.count) of \(allApps.count) running")
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
         .padding()
     }
@@ -193,9 +202,26 @@ private struct GeneralSettingsView: View {
                         .foregroundStyle(.secondary)
                 }
             }
+
+            Section("About") {
+                LabeledContent("Version") {
+                    Text(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "dev")
+                        .foregroundStyle(.secondary)
+                }
+                LabeledContent("Source code") {
+                    Link("GitHub", destination: URL(string: "https://github.com/roypadina/window-organizer")!)
+                }
+                LabeledContent("Support") {
+                    Link("Buy me a coffee on Ko-fi ☕", destination: URL(string: "https://ko-fi.com/roypadina")!)
+                }
+            }
         }
         .formStyle(.grouped)
         .onAppear { controller.refreshPermissions() }
+        // Flip to Granted on its own after the user enables it in System Settings.
+        .onReceive(Timer.publish(every: 2, on: .main, in: .common).autoconnect()) { _ in
+            if !controller.isAccessibilityGranted { controller.refreshPermissions() }
+        }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             controller.refreshPermissions()
         }

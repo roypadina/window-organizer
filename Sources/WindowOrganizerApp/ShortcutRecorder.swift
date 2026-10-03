@@ -9,23 +9,38 @@ struct ShortcutRecorder: View {
     @ObservedObject var controller: AppController
     @Binding var hint: String?
     @State private var monitor: Any?
+    @State private var heldModifiers = Set<ShortcutModifier>()
 
     private var isRecording: Bool { controller.recordingAction == action }
     private var shortcut: OrganizerShortcut? { controller.preferences.shortcuts[action] }
 
     var body: some View {
-        Button {
-            isRecording ? stop() : start()
-        } label: {
-            Text(isRecording ? "Type shortcut…" : shortcut?.displayString ?? "Record Shortcut")
-                .foregroundStyle(isRecording || shortcut == nil ? .secondary : .primary)
-                .frame(minWidth: 120)
-        }
-        .buttonStyle(.bordered)
-        .overlay {
-            if isRecording {
-                RoundedRectangle(cornerRadius: 6).strokeBorder(Color.accentColor, lineWidth: 2)
+        HStack(spacing: 4) {
+            Button {
+                isRecording ? stop() : start()
+            } label: {
+                Text(label)
+                    .foregroundStyle(isRecording || shortcut == nil ? .secondary : .primary)
+                    .frame(minWidth: 120)
             }
+            .buttonStyle(.bordered)
+            .overlay {
+                if isRecording {
+                    RoundedRectangle(cornerRadius: 6).strokeBorder(Color.accentColor, lineWidth: 2)
+                }
+            }
+
+            Button {
+                stop()
+                controller.preferences.shortcuts[action] = nil
+            } label: {
+                Image(systemName: "xmark.circle.fill")
+                    .foregroundStyle(.secondary)
+            }
+            .buttonStyle(.borderless)
+            .help("Remove shortcut")
+            .opacity(shortcut == nil || isRecording ? 0 : 1)
+            .disabled(shortcut == nil || isRecording)
         }
         .onChange(of: isRecording) { _, recording in
             // Another recorder took over: drop this one's monitor.
@@ -37,12 +52,24 @@ struct ShortcutRecorder: View {
         }
     }
 
+    private var label: String {
+        guard isRecording else { return shortcut?.displayString ?? "Record Shortcut" }
+        let held = heldModifiers.sorted().map(\.symbol).joined()
+        return held.isEmpty ? "Type shortcut…" : held + "…"
+    }
+
     private func start() {
         controller.recordingAction = action
         hint = nil
         removeMonitor()
-        monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-            MainActor.assumeIsolated { handle(event) }
+        monitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .flagsChanged]) { event in
+            MainActor.assumeIsolated {
+                if event.type == .flagsChanged {
+                    heldModifiers = ShortcutModifier.set(from: event.modifierFlags)
+                } else {
+                    handle(event)
+                }
+            }
             return nil
         }
     }
@@ -55,6 +82,7 @@ struct ShortcutRecorder: View {
     private func removeMonitor() {
         if let monitor { NSEvent.removeMonitor(monitor) }
         monitor = nil
+        heldModifiers = []
     }
 
     private func handle(_ event: NSEvent) {

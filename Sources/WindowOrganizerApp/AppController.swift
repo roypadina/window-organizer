@@ -8,9 +8,7 @@ final class AppController: ObservableObject {
     @Published var preferences: OrganizerPreferences {
         didSet {
             preferencesStore.save(preferences)
-            if recordingAction == nil {
-                shortcutManager?.updateShortcuts(preferences.shortcuts)
-            }
+            applyShortcuts()
             setLaunchAtLogin(preferences.launchAtLoginEnabled)
         }
     }
@@ -20,9 +18,11 @@ final class AppController: ObservableObject {
     /// so pressing the current combo is captured instead of firing the action.
     @Published var recordingAction: OrganizerAction? {
         didSet {
-            shortcutManager?.updateShortcuts(recordingAction == nil ? preferences.shortcuts : [:])
+            applyShortcuts()
         }
     }
+    /// Actions whose shortcut macOS refused, usually because another app already owns it.
+    @Published private(set) var unavailableShortcuts: Set<OrganizerAction> = []
     @Published var statusMessage: String = "Ready"
 
     private let preferencesStore: PreferencesPersisting
@@ -30,6 +30,7 @@ final class AppController: ObservableObject {
     private let loginItemManager: LoginItemManaging
     private let actionEngine: WindowActionEngine
     private var shortcutManager: GlobalShortcutManager?
+    private var workspaceObservers: [NSObjectProtocol] = []
 
     init(
         preferencesStore: PreferencesPersisting = UserDefaultsPreferencesStore(),
@@ -48,7 +49,24 @@ final class AppController: ObservableObject {
         shortcutManager = GlobalShortcutManager { [weak self] action in
             self?.perform(action)
         }
-        shortcutManager?.updateShortcuts(loadedPreferences.shortcuts)
+        applyShortcuts()
+
+        // Keep the Settings → Apps list current as apps launch and quit.
+        let center = NSWorkspace.shared.notificationCenter
+        for name in [NSWorkspace.didLaunchApplicationNotification, NSWorkspace.didTerminateApplicationNotification] {
+            workspaceObservers.append(center.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
+                MainActor.assumeIsolated { self?.objectWillChange.send() }
+            })
+        }
+    }
+
+    private func applyShortcuts() {
+        guard let shortcutManager else { return }
+        if recordingAction == nil {
+            unavailableShortcuts = shortcutManager.updateShortcuts(preferences.shortcuts)
+        } else {
+            shortcutManager.updateShortcuts([:])
+        }
     }
 
     func perform(_ action: OrganizerAction) {

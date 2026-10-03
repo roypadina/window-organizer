@@ -26,20 +26,26 @@ final class GlobalShortcutManager: @unchecked Sendable {
         }
     }
 
-    func updateShortcuts(_ shortcuts: [OrganizerAction: OrganizerShortcut]) {
+    /// Returns the actions whose shortcut macOS refused (usually: another app already owns it).
+    @discardableResult
+    func updateShortcuts(_ shortcuts: [OrganizerAction: OrganizerShortcut]) -> Set<OrganizerAction> {
         unregisterAll()
 
+        var failed = Set<OrganizerAction>()
         for action in OrganizerAction.allCases {
             guard let shortcut = shortcuts[action], shortcut.isValid else {
                 continue
             }
-            register(shortcut, for: action)
+            if !register(shortcut, for: action) {
+                failed.insert(action)
+            }
         }
+        return failed
     }
 
-    private func register(_ shortcut: OrganizerShortcut, for action: OrganizerAction) {
+    private func register(_ shortcut: OrganizerShortcut, for action: OrganizerAction) -> Bool {
         guard let keyCode = shortcut.carbonKeyCode else {
-            return
+            return false
         }
 
         let id = nextID
@@ -57,11 +63,12 @@ final class GlobalShortcutManager: @unchecked Sendable {
         )
 
         guard status == noErr, let hotKeyRef else {
-            return
+            return false
         }
 
         hotKeyRefs[action] = hotKeyRef
         actionByID[id] = action
+        return true
     }
 
     private func unregisterAll() {
