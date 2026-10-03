@@ -34,6 +34,8 @@ all your open apps and windows at once, from global shortcuts. It is not an app 
 - **Global shortcuts** for all four actions, configurable in Settings.
 - **App rules** — include or exclude any running app by bundle identifier. Finder, the Dock,
   System Settings, menu bar apps and Window Organizer itself are skipped by default.
+  Search the running apps and filter by kind (Dock, menu bar, background), developer (Apple or
+  third-party) and status (targeted, skipped, has a rule).
 - **Action scope** — the windows on the current Space and displays (default), or all Spaces and displays.
 - **Launch at Login**, and no Dock icon: it lives in the menu bar only.
 

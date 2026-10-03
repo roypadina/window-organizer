@@ -129,20 +129,42 @@ private struct BehaviorSettingsView: View {
 
 private struct AppsSettingsView: View {
     @ObservedObject var controller: AppController
+    @State private var filter = AppListFilter()
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        let allApps = controller.runningApps()
+        let resolver = controller.targetResolver()
+        let apps = filter.apply(to: allApps, resolver: resolver)
+
+        VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Text("Running Apps")
-                    .font(.headline)
-                Spacer()
+                TextField("Search", text: $filter.query, prompt: Text("Search name or bundle ID"))
+                    .textFieldStyle(.roundedBorder)
                 Button("Refresh") {
                     controller.objectWillChange.send()
                 }
             }
 
-            List(controller.runningApps()) { app in
+            HStack {
+                Picker("Kind", selection: $filter.kind) {
+                    ForEach(AppListFilter.Kind.allCases) { Text($0.title).tag($0) }
+                }
+                Picker("Developer", selection: $filter.source) {
+                    ForEach(AppListFilter.Source.allCases) { Text($0.title).tag($0) }
+                }
+                Picker("Status", selection: $filter.status) {
+                    ForEach(AppListFilter.Status.allCases) { Text($0.title).tag($0) }
+                }
+            }
+            .labelsHidden()
+
+            List(apps) { app in
                 HStack {
+                    Image(nsImage: NSRunningApplication(processIdentifier: app.processIdentifier)?.icon
+                        ?? NSWorkspace.shared.icon(for: .application))
+                        .resizable()
+                        .frame(width: 20, height: 20)
+
                     VStack(alignment: .leading) {
                         Text(app.localizedName)
                         Text(app.bundleIdentifier)
@@ -151,6 +173,10 @@ private struct AppsSettingsView: View {
                     }
 
                     Spacer()
+
+                    Text(resolver.isEligible(app) ? "Targeted" : "Skipped")
+                        .font(.caption)
+                        .foregroundStyle(resolver.isEligible(app) ? .green : .secondary)
 
                     Picker("Rule", selection: Binding(
                         get: { controller.inclusionState(for: app.bundleIdentifier) },
@@ -164,6 +190,16 @@ private struct AppsSettingsView: View {
                     .frame(width: 130)
                 }
             }
+            .overlay {
+                if apps.isEmpty {
+                    Text("No matching apps")
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            Text("Showing \(apps.count) of \(allApps.count) running")
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
     }
 }

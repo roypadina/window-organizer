@@ -84,6 +84,13 @@ final class AppController: ObservableObject {
             }
     }
 
+    func targetResolver() -> TargetResolver {
+        TargetResolver(
+            preferences: preferences,
+            currentBundleIdentifier: Bundle.main.bundleIdentifier ?? "com.padina.window-organizer"
+        )
+    }
+
     func inclusionState(for bundleIdentifier: String) -> AppRuleState {
         if preferences.includedBundleIdentifiers.contains(bundleIdentifier) {
             return .included

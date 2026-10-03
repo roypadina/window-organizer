@@ -90,4 +90,36 @@ struct WindowOrganizerCoreTests {
         #expect(SettingsLayoutMetrics.headerPadding == 12)
         #expect(SettingsLayoutMetrics.contentPadding == 16)
     }
+
+    @Test("app list filter combines search, status, developer and kind")
+    func appListFilter() {
+        var preferences = OrganizerPreferences.defaults
+        preferences.excludedBundleIdentifiers = ["com.tinyspeck.slackmacgap"]
+        let resolver = TargetResolver(preferences: preferences, currentBundleIdentifier: "com.padina.window-organizer")
+        let apps = [
+            RunningAppDescriptor(bundleIdentifier: "com.apple.Safari", localizedName: "Safari", processIdentifier: 1, activationPolicy: .regular),
+            RunningAppDescriptor(bundleIdentifier: "com.apple.finder", localizedName: "Finder", processIdentifier: 2, activationPolicy: .regular),
+            RunningAppDescriptor(bundleIdentifier: "com.tinyspeck.slackmacgap", localizedName: "Slack", processIdentifier: 3, activationPolicy: .regular),
+            RunningAppDescriptor(bundleIdentifier: "com.example.menu", localizedName: "Menu Thing", processIdentifier: 4, activationPolicy: .accessory),
+            RunningAppDescriptor(bundleIdentifier: "com.apple.agent", localizedName: "Agent", processIdentifier: 5, activationPolicy: .prohibited)
+        ]
+        func names(_ configure: (inout AppListFilter) -> Void) -> [String] {
+            var filter = AppListFilter()
+            configure(&filter)
+            return filter.apply(to: apps, resolver: resolver).map(\.localizedName)
+        }
+
+        #expect(names { _ in } == ["Safari", "Finder", "Slack", "Menu Thing"])
+        #expect(names { $0.kind = .all }.count == 5)
+        #expect(names { $0.kind = .background } == ["Agent"])
+        #expect(names { $0.kind = .menuBar } == ["Menu Thing"])
+        #expect(names { $0.status = .targeted } == ["Safari"])
+        #expect(names { $0.status = .skipped } == ["Finder", "Slack", "Menu Thing"])
+        #expect(names { $0.status = .hasRule } == ["Slack"])
+        #expect(names { $0.source = .apple } == ["Safari", "Finder"])
+        #expect(names { $0.source = .thirdParty } == ["Slack", "Menu Thing"])
+        #expect(names { $0.query = "SLACK" } == ["Slack"])
+        #expect(names { $0.query = "tinyspeck" } == ["Slack"])
+        #expect(names { $0.query = "  " }.count == 4)
+    }
 }
