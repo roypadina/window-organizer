@@ -38,8 +38,7 @@ struct WindowOrganizerApp: App {
             Divider()
 
             Button("About Window Organizer") {
-                NSApp.activate(ignoringOtherApps: true)
-                NSApp.orderFrontStandardAboutPanel(options: [.credits: Self.aboutCredits])
+                AboutWindow.show()
             }
 
             Button("Support on Ko-fi ☕") {
@@ -63,14 +62,6 @@ struct WindowOrganizerApp: App {
 
 extension WindowOrganizerApp {
     static let koFiURL = URL(string: "https://ko-fi.com/roypadina")!
-
-    static let aboutCredits: NSAttributedString = {
-        let text = NSMutableAttributedString(
-            string: "Made by Roy Padina\n\nI'm a software engineer from Israel who builds small, focused Mac tools to fix the little annoyances in my own day — then shares them free and open source.\n\nIf this app saves you time, a coffee on Ko-fi keeps the next one coming. ☕\n\n",
-            attributes: [.font: NSFont.systemFont(ofSize: 11), .foregroundColor: NSColor.labelColor])
-        text.append(NSAttributedString(string: "Support on Ko-fi ☕", attributes: [.font: NSFont.systemFont(ofSize: 11), .link: koFiURL]))
-        return text
-    }()
 
     /// Template image bundled by Scripts/package_app.sh; `swift run` has no bundle resources, so it falls back to an SF Symbol.
     static let menuBarIcon: NSImage = {

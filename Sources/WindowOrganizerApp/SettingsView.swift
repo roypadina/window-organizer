@@ -214,17 +214,12 @@ private struct GeneralSettingsView: View {
                             .foregroundStyle(.secondary)
                     }
                 }
-                Text("Made by Roy Padina").font(.headline)
-                Text("I'm a software engineer from Israel who builds small, focused Mac tools to fix the little annoyances in my own day — then shares them free and open source.")
-                Text("If this app saves you time, a coffee on Ko-fi keeps the next one coming. ☕")
                 HStack {
+                    Button("About Window Organizer…") { AboutWindow.show() }
                     Button("Support on Ko-fi ☕") {
-                        NSWorkspace.shared.open(URL(string: "https://ko-fi.com/roypadina")!)
+                        NSWorkspace.shared.open(WindowOrganizerApp.koFiURL)
                     }
                     .buttonStyle(.borderedProminent)
-                    Button("GitHub") {
-                        NSWorkspace.shared.open(URL(string: "https://github.com/roypadina/window-organizer")!)
-                    }
                 }
             }
         }
