@@ -31,7 +31,8 @@ all your open apps and windows at once, from global shortcuts. It is not an app 
 - **Close all windows** — presses each window's close button; apps keep running.
 - **Quit apps** — asks every targeted app to quit normally (save dialogs still appear).
 - **Force quit apps** — terminates targeted apps immediately, after a confirmation.
-- **Global shortcuts** for all four actions, configurable in Settings.
+- **Global shortcuts** for all four actions: record any key combination in Settings, with live
+  preview, conflict checks and a warning when another app already owns a shortcut.
 - **App rules** — include or exclude any running app by bundle identifier. Finder, the Dock,
   System Settings, menu bar apps and Window Organizer itself are skipped by default.
   Search the running apps and filter by kind (Dock, menu bar, background), developer (Apple or
@@ -47,7 +48,7 @@ all your open apps and windows at once, from global shortcuts. It is not an app 
 brew install --cask roypadina/tap/window-organizer
 ```
 
-**Not notarized.** Window Organizer is ad-hoc signed, so macOS may block the first launch. Either
+**Not notarized.** Window Organizer is self-signed (no paid Apple Developer ID), so macOS may block the first launch. Either
 right-click it in `/Applications` → **Open** (then **Open Anyway** in System Settings → Privacy & Security),
 or clear quarantine once:
 
@@ -66,8 +67,8 @@ Minimize and close use the macOS Accessibility API, so they need permission (qui
 2. Click **Grant Access…** next to Accessibility.
 3. Turn on **Window Organizer** in System Settings → Privacy & Security → Accessibility.
 
-The ad-hoc signature changes with every update, so after an update you may need to turn the
-switch off and on again, or reset it and grant again:
+Since 0.2.0 releases are signed with the same certificate, so the grant survives updates.
+Upgrading from 0.1.0, or still asked for access although it's on? Reset it once and grant again:
 
 ```bash
 tccutil reset Accessibility com.padina.window-organizer
@@ -110,7 +111,7 @@ Scripts/package_app.sh            # writes dist/Window Organizer.app
 open "dist/Window Organizer.app"
 ```
 
-`RELEASE=1 Scripts/package_app.sh` also writes an ad-hoc signed `dist/Window-Organizer.zip`.
+`RELEASE=1 Scripts/package_app.sh` also writes `dist/Window-Organizer.zip`.
 `swift run WindowOrganizerApp` works for quick checks, but use the packaged app for real menu bar,
 Accessibility and Launch at Login behavior. See [CONTRIBUTING.md](CONTRIBUTING.md) and the
 [wiki](https://github.com/roypadina/window-organizer/wiki).
