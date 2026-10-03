@@ -204,15 +204,27 @@ private struct GeneralSettingsView: View {
             }
 
             Section("About") {
-                LabeledContent("Version") {
-                    Text(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "dev")
-                        .foregroundStyle(.secondary)
+                HStack(spacing: 12) {
+                    Image(nsImage: NSApp.applicationIconImage)
+                        .resizable()
+                        .frame(width: 56, height: 56)
+                    VStack(alignment: .leading) {
+                        Text("Window Organizer").font(.headline)
+                        Text("Version " + (Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "dev"))
+                            .foregroundStyle(.secondary)
+                    }
                 }
-                LabeledContent("Source code") {
-                    Link("GitHub", destination: URL(string: "https://github.com/roypadina/window-organizer")!)
-                }
-                LabeledContent("Support") {
-                    Link("Buy me a coffee on Ko-fi ☕", destination: URL(string: "https://ko-fi.com/roypadina")!)
+                Text("Made by Roy Padina").font(.headline)
+                Text("I'm a software engineer from Israel who builds small, focused Mac tools to fix the little annoyances in my own day — then shares them free and open source.")
+                Text("If this app saves you time, a coffee on Ko-fi keeps the next one coming. ☕")
+                HStack {
+                    Button("Support on Ko-fi ☕") {
+                        NSWorkspace.shared.open(URL(string: "https://ko-fi.com/roypadina")!)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    Button("GitHub") {
+                        NSWorkspace.shared.open(URL(string: "https://github.com/roypadina/window-organizer")!)
+                    }
                 }
             }
         }
