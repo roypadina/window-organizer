@@ -94,6 +94,11 @@ private struct AppsSettingsView: View {
             }
             .labelsHidden()
 
+            Text("**Default** follows the built-in rules: Dock apps are targeted; Finder, System Settings, menu bar apps and background processes are skipped. **Include** always targets an app, **Exclude** never touches it.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
             List(apps) { app in
                 HStack {
                     Image(nsImage: NSRunningApplication(processIdentifier: app.processIdentifier)?.icon
@@ -124,6 +129,7 @@ private struct AppsSettingsView: View {
                     }
                     .pickerStyle(.menu)
                     .labelsHidden()
+                    .help("Default: follow the built-in rules. Include: always target. Exclude: never touch.")
                     .frame(width: 110)
                 }
             }
