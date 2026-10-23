@@ -3,17 +3,29 @@ import WindowOrganizerCore
 
 struct SettingsView: View {
     @ObservedObject var controller: AppController
+    @State private var tab: Tab
+
+    enum Tab: Hashable { case shortcuts, behavior, apps, general }
+
+    init(controller: AppController, tab: Tab = .shortcuts) {
+        self.controller = controller
+        _tab = State(initialValue: tab)
+    }
 
     var body: some View {
-        TabView {
+        TabView(selection: $tab) {
             ShortcutsSettingsView(controller: controller)
                 .tabItem { Label("Shortcuts", systemImage: "keyboard") }
+                .tag(Tab.shortcuts)
             BehaviorSettingsView(preferences: $controller.preferences)
                 .tabItem { Label("Behavior", systemImage: "slider.horizontal.3") }
+                .tag(Tab.behavior)
             AppsSettingsView(controller: controller)
                 .tabItem { Label("Apps", systemImage: "macwindow.on.rectangle") }
+                .tag(Tab.apps)
             GeneralSettingsView(controller: controller)
                 .tabItem { Label("General", systemImage: "gearshape") }
+                .tag(Tab.general)
         }
         .frame(width: SettingsLayoutMetrics.windowWidth)
     }

@@ -11,6 +11,9 @@ all your open apps and windows at once, from global shortcuts. It is not an app 
 
 [![macOS](https://img.shields.io/badge/macOS-14%2B-000000?logo=apple&logoColor=white)](https://www.apple.com/macos/)
 [![Swift](https://img.shields.io/badge/Swift-6-F05138?logo=swift&logoColor=white)](https://swift.org)
+[![Universal](https://img.shields.io/badge/Apple%20Silicon%20%2B%20Intel-universal-555555?logo=apple&logoColor=white)](#requirements)
+[![Release](https://img.shields.io/github/v/release/roypadina/window-organizer?logo=github&label=release)](https://github.com/roypadina/window-organizer/releases/latest)
+[![Homebrew](https://img.shields.io/badge/brew-roypadina%2Ftap-FBB040?logo=homebrew&logoColor=white)](https://github.com/roypadina/homebrew-tap)
 [![CI](https://github.com/roypadina/window-organizer/actions/workflows/ci.yml/badge.svg)](https://github.com/roypadina/window-organizer/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?logo=opensourceinitiative&logoColor=white)](LICENSE)
 [![Ko-fi](https://img.shields.io/badge/Ko--fi-support-F16061?logo=ko-fi&logoColor=white)](https://ko-fi.com/roypadina)
@@ -19,8 +22,11 @@ all your open apps and windows at once, from global shortcuts. It is not an app 
 
 <br>
 
-<!-- Screenshot placeholder: add docs/screenshots/menu.png (the menu bar menu) and replace this comment with
-<img src="docs/screenshots/menu.png" alt="The Window Organizer menu bar menu" width="420"> -->
+```bash
+brew install --cask roypadina/tap/window-organizer
+```
+
+<img src="docs/screenshots/settings-shortcuts.png" alt="Window Organizer Settings, Shortcuts tab: global shortcuts for Minimize All Windows, Close All Windows, Quit Apps and Force Quit Apps" width="560">
 
 </div>
 
@@ -41,16 +47,18 @@ all your open apps and windows at once, from global shortcuts. It is not an app 
 - **Action scope** — the windows on the current Space and displays (default), or all Spaces and displays.
 - **Launch at Login**, and no Dock icon: it lives in the menu bar only.
 
-## Install
+## Requirements
 
-> **Requires macOS 14 Sonoma or newer.**
+macOS 14 Sonoma or later · Apple Silicon and Intel (universal binary)
+
+## Install
 
 ```bash
 brew install --cask roypadina/tap/window-organizer
 ```
 
-**Not notarized.** Window Organizer is self-signed (no paid Apple Developer ID), so macOS may block the first launch. Either
-right-click it in `/Applications` → **Open** (then **Open Anyway** in System Settings → Privacy & Security),
+**Not notarized.** Window Organizer is self-signed (no paid Apple Developer ID), so macOS may block the first launch. Open
+**System Settings → Privacy & Security**, scroll down and click **Open Anyway** (right-click → Open no longer works on macOS 15+),
 or clear quarantine once:
 
 ```bash

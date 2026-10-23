@@ -28,6 +28,10 @@ let package = Package(
         .testTarget(
             name: "WindowOrganizerCoreTests",
             dependencies: ["WindowOrganizerCore"]
+        ),
+        .testTarget(
+            name: "WindowOrganizerScreenshotTests",
+            dependencies: ["WindowOrganizerApp", "WindowOrganizerCore"]
         )
     ]
 )

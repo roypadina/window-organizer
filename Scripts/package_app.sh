@@ -17,12 +17,15 @@ RELEASE="${RELEASE:-}"
 
 cd "$ROOT_DIR"
 
-swift build -c "$BUILD_CONFIG"
+# Universal binary (Apple Silicon + Intel). The output dir differs per build system, so ask SwiftPM for it.
+BUILD_ARGS=(-c "$BUILD_CONFIG" --arch arm64 --arch x86_64)
+swift build "${BUILD_ARGS[@]}"
+BIN_DIR="$(swift build "${BUILD_ARGS[@]}" --show-bin-path)"
 
 rm -rf "$APP_DIR"
 mkdir -p "$MACOS_DIR" "$RESOURCES_DIR"
 
-cp ".build/$BUILD_CONFIG/WindowOrganizerApp" "$MACOS_DIR/$APP_NAME"
+cp "$BIN_DIR/WindowOrganizerApp" "$MACOS_DIR/$APP_NAME"
 cp Assets/icons/AppIcon.icns Assets/icons/menubar.png Assets/icons/menubar@2x.png "$RESOURCES_DIR/"
 
 cat > "$CONTENTS_DIR/Info.plist" <<PLIST
@@ -43,9 +46,9 @@ cat > "$CONTENTS_DIR/Info.plist" <<PLIST
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
-    <string>0.2.2</string>
+    <string>0.2.3</string>
     <key>CFBundleVersion</key>
-    <string>3</string>
+    <string>4</string>
     <key>LSMinimumSystemVersion</key>
     <string>14.0</string>
     <key>LSUIElement</key>
