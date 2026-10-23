@@ -36,7 +36,8 @@ final class AppController: ObservableObject {
         preferencesStore: PreferencesPersisting = UserDefaultsPreferencesStore(),
         permissionsHelper: PermissionsHelping = PermissionsHelper(),
         loginItemManager: LoginItemManaging = LoginItemManager(),
-        actionEngine: WindowActionEngine = WindowActionEngine()
+        actionEngine: WindowActionEngine = WindowActionEngine(),
+        registersShortcuts: Bool = true // false only for offscreen screenshot rendering
     ) {
         self.preferencesStore = preferencesStore
         self.permissionsHelper = permissionsHelper
@@ -46,9 +47,9 @@ final class AppController: ObservableObject {
         let loadedPreferences = preferencesStore.load()
         preferences = loadedPreferences
         isAccessibilityGranted = permissionsHelper.isAccessibilityTrusted
-        shortcutManager = GlobalShortcutManager { [weak self] action in
+        shortcutManager = registersShortcuts ? GlobalShortcutManager { [weak self] action in
             self?.perform(action)
-        }
+        } : nil
         applyShortcuts()
 
         // Keep the Settings → Apps list current as apps launch and quit.
