@@ -1,37 +1,7 @@
 import SwiftUI
 import WindowOrganizerCore
 
-struct SettingsView: View {
-    @ObservedObject var controller: AppController
-    @State private var tab: Tab
-
-    enum Tab: Hashable { case shortcuts, behavior, apps, general }
-
-    init(controller: AppController, tab: Tab = .shortcuts) {
-        self.controller = controller
-        _tab = State(initialValue: tab)
-    }
-
-    var body: some View {
-        TabView(selection: $tab) {
-            ShortcutsSettingsView(controller: controller)
-                .tabItem { Label("Shortcuts", systemImage: "keyboard") }
-                .tag(Tab.shortcuts)
-            BehaviorSettingsView(preferences: $controller.preferences)
-                .tabItem { Label("Behavior", systemImage: "slider.horizontal.3") }
-                .tag(Tab.behavior)
-            AppsSettingsView(controller: controller)
-                .tabItem { Label("Apps", systemImage: "macwindow.on.rectangle") }
-                .tag(Tab.apps)
-            GeneralSettingsView(controller: controller)
-                .tabItem { Label("General", systemImage: "gearshape") }
-                .tag(Tab.general)
-        }
-        .frame(width: SettingsLayoutMetrics.windowWidth)
-    }
-}
-
-private struct ShortcutsSettingsView: View {
+struct ShortcutsSettingsView: View {
     @ObservedObject var controller: AppController
     @State private var hint: String?
 
@@ -74,13 +44,13 @@ private struct ShortcutsSettingsView: View {
     }
 }
 
-private struct BehaviorSettingsView: View {
-    @Binding var preferences: OrganizerPreferences
+struct BehaviorSettingsView: View {
+    @ObservedObject var controller: AppController
 
     var body: some View {
         Form {
             Section {
-                Picker("Action scope", selection: $preferences.scope) {
+                Picker("Action scope", selection: $controller.preferences.scope) {
                     ForEach(ActionScope.allCases) { scope in
                         Text(scope.title).tag(scope)
                     }
@@ -95,7 +65,7 @@ private struct BehaviorSettingsView: View {
     }
 }
 
-private struct AppsSettingsView: View {
+struct AppsSettingsView: View {
     @ObservedObject var controller: AppController
     @State private var filter = AppListFilter()
 
@@ -177,7 +147,7 @@ private struct AppsSettingsView: View {
     }
 }
 
-private struct GeneralSettingsView: View {
+struct GeneralSettingsView: View {
     @ObservedObject var controller: AppController
 
     var body: some View {
