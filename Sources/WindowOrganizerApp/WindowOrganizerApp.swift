@@ -32,6 +32,15 @@ private struct MenuContent: View {
     @ObservedObject var controller: AppController
 
     var body: some View {
+        // Minimize and Close do nothing without Accessibility, so say so here instead of only in Settings (FLW-9).
+        if !controller.isAccessibilityGranted {
+            Button("Grant Accessibility Access…") {
+                controller.grantAccessibility()
+            }
+
+            Divider()
+        }
+
         actionButton(.minimizeAllWindows)
         actionButton(.closeAllWindows)
         actionButton(.quitApps)

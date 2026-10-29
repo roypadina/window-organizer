@@ -76,7 +76,7 @@ final class AppController: ObservableObject {
         let policy = ActionPolicy(preferences: preferences)
         if policy.requiresAccessibilityPermission(for: action),
            !permissionsHelper.isAccessibilityTrusted {
-            permissionsHelper.requestAccessibilityPermissionPrompt()
+            grantAccessibility()
             statusMessage = "Accessibility permission is required for \(action.title)"
             return
         }
@@ -165,6 +165,7 @@ final class AppController: ObservableObject {
         alert.alertStyle = .critical
         alert.addButton(withTitle: "Force Quit")
         alert.addButton(withTitle: "Cancel")
+        NSApp.activate()  // inactive .accessory app, usually right after a global hotkey: show the alert in front
         return alert.runModal() == .alertFirstButtonReturn
     }
 }
