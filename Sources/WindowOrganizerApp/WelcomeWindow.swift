@@ -19,6 +19,11 @@ enum WelcomeWindow {
             w.isReleasedWhenClosed = false
             w.center()
             window = w
+            // Release the window on close so its view stops listening for app activation.
+            Task { @MainActor in
+                for await _ in NotificationCenter.default.notifications(named: NSWindow.willCloseNotification, object: w) { break }
+                window = nil
+            }
         }
         if let window { AccessoryWindows.shared.show(window) }
     }
