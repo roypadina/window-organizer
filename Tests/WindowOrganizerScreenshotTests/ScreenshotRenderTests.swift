@@ -16,10 +16,6 @@ private struct FakePermissions: PermissionsHelping {
     func requestAccessibilityPermissionPrompt() {}
 }
 
-private struct FakeLoginItem: LoginItemManaging {
-    func setEnabled(_ enabled: Bool) throws {}
-}
-
 /// Dev-only: renders README screenshots offscreen. Skipped unless RENDER_SCREENSHOTS=<output dir>.
 /// Usage: RENDER_SCREENSHOTS=$PWD/docs/screenshots swift test --filter ScreenshotRenderTests
 @MainActor
@@ -51,7 +47,6 @@ final class ScreenshotRenderTests: XCTestCase {
         let controller = AppController(
             preferencesStore: MemoryStore(),
             permissionsHelper: FakePermissions(),
-            loginItemManager: FakeLoginItem(),
             registersShortcuts: false
         )
         try render(

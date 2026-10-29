@@ -157,7 +157,7 @@ struct GeneralSettingsView: View {
     var body: some View {
         Form {
             Section("Startup") {
-                Toggle("Launch at Login", isOn: $controller.preferences.launchAtLoginEnabled)
+                LaunchAtLoginToggle()
             }
 
             Section {
@@ -208,10 +208,11 @@ struct GeneralSettingsView: View {
                 }
                 HStack {
                     Button("About Window Organizer…") { AboutWindow.show() }
+                    Button("Welcome Guide…") { WelcomeWindow.show() }
                     Button("Support on Ko-fi ☕") {
                         NSWorkspace.shared.open(WindowOrganizerApp.koFiURL)
                     }
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(.bordered)
                 }
             }
         }

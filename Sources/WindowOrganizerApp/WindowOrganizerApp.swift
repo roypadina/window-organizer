@@ -109,8 +109,13 @@ extension WindowOrganizerApp {
 }
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
-    func applicationDidFinishLaunching(_ notification: Notification) {
+    @MainActor func applicationDidFinishLaunching(_ notification: Notification) {
         NSApplication.shared.setActivationPolicy(.accessory)
+        // First launch only (MBX-18); never in the headless test pipeline.
+        guard ProcessInfo.processInfo.environment["WINDOW_ORGANIZER_TEST"] != "1",
+              !UserDefaults.standard.bool(forKey: "didShowWelcome") else { return }
+        UserDefaults.standard.set(true, forKey: "didShowWelcome")
+        WelcomeWindow.show()
     }
 
     /// Opening Window Organizer again (Finder, Raycast) shows Settings: the way in when the icon is hidden (MBX-8).

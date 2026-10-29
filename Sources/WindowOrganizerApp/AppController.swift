@@ -9,7 +9,6 @@ final class AppController: ObservableObject {
         didSet {
             preferencesStore.save(preferences)
             applyShortcuts()
-            setLaunchAtLogin(preferences.launchAtLoginEnabled)
         }
     }
 
@@ -27,7 +26,6 @@ final class AppController: ObservableObject {
 
     private let preferencesStore: PreferencesPersisting
     private let permissionsHelper: PermissionsHelping
-    private let loginItemManager: LoginItemManaging
     private let actionEngine: WindowActionEngine
     private var shortcutManager: GlobalShortcutManager?
     private var workspaceObservers: [NSObjectProtocol] = []
@@ -35,13 +33,11 @@ final class AppController: ObservableObject {
     init(
         preferencesStore: PreferencesPersisting = UserDefaultsPreferencesStore(),
         permissionsHelper: PermissionsHelping = PermissionsHelper(),
-        loginItemManager: LoginItemManaging = LoginItemManager(),
         actionEngine: WindowActionEngine = WindowActionEngine(),
         registersShortcuts: Bool = true // false only for offscreen screenshot rendering
     ) {
         self.preferencesStore = preferencesStore
         self.permissionsHelper = permissionsHelper
-        self.loginItemManager = loginItemManager
         self.actionEngine = actionEngine
 
         let loadedPreferences = preferencesStore.load()
@@ -147,14 +143,6 @@ final class AppController: ObservableObject {
             preferences.includedBundleIdentifiers.insert(bundleIdentifier)
         case .excluded:
             preferences.excludedBundleIdentifiers.insert(bundleIdentifier)
-        }
-    }
-
-    private func setLaunchAtLogin(_ enabled: Bool) {
-        do {
-            try loginItemManager.setEnabled(enabled)
-        } catch {
-            statusMessage = "Launch at Login could not be updated: \(error.localizedDescription)"
         }
     }
 

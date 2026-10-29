@@ -38,9 +38,9 @@ final class SettingsWindow {
             tabs.tabStyle = .toolbar
             // Each pane gets its own height (SET-8): grouped forms have no intrinsic height.
             add(tabs, "Shortcuts", "keyboard", ShortcutsSettingsView(controller: controller), height: 320)
-            add(tabs, "Behavior", "slider.horizontal.3", BehaviorSettingsView(controller: controller), height: 220)
+            add(tabs, "Behavior", "slider.horizontal.3", BehaviorSettingsView(controller: controller), height: 140)
             add(tabs, "Apps", "macwindow.on.rectangle", AppsSettingsView(controller: controller), height: 560)
-            add(tabs, "General", "gearshape", GeneralSettingsView(controller: controller), height: 480)
+            add(tabs, "General", "gearshape", GeneralSettingsView(controller: controller), height: 520)
             if let last = UserDefaults.standard.string(forKey: SettingsTabs.lastTabKey),  // reopen on the last pane (SET-3)
                let index = tabs.tabViewItems.firstIndex(where: { $0.label == last }) {
                 tabs.selectedTabViewItemIndex = index
