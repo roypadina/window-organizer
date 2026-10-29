@@ -46,7 +46,7 @@ brew install --cask roypadina/tap/window-organizer
   Search the running apps and filter by kind (Dock, menu bar, background), developer (Apple or
   third-party) and status (targeted, skipped, has a rule).
 - **Action scope** — the windows on the current Space and displays (default), or all Spaces and displays.
-- **Launch at Login**, and no Dock icon: it lives in the menu bar only.
+- **Open at Login**, and no Dock icon: it lives in the menu bar only.
 
 ## Requirements
 
