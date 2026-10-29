@@ -25,10 +25,13 @@ struct ShortcutsSettingsView: View {
             } footer: {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(hint ?? "Click a shortcut and press the new keys. Esc cancels, Delete removes it.")
-                        .foregroundStyle(hint == nil ? Color.secondary : Color.red)
+                        .foregroundStyle(hint == nil ? Color.secondary : Color.primary)
                     if !controller.unavailableShortcuts.isEmpty {
-                        Text("⚠︎ marks a shortcut another app already uses; it won't work until you change it.")
-                            .foregroundStyle(.orange)
+                        Label {
+                            Text("marks a shortcut another app already uses; it won't work until you change it.")
+                        } icon: {
+                            Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+                        }
                     }
                 }
             }
@@ -102,6 +105,7 @@ struct AppsSettingsView: View {
                         ?? NSWorkspace.shared.icon(for: .application))
                         .resizable()
                         .frame(width: 20, height: 20)
+                        .accessibilityHidden(true)
 
                     VStack(alignment: .leading) {
                         Text(app.localizedName)
@@ -114,9 +118,9 @@ struct AppsSettingsView: View {
 
                     Text(resolver.isEligible(app) ? "Targeted" : "Skipped")
                         .font(.caption)
-                        .foregroundStyle(resolver.isEligible(app) ? .green : .secondary)
+                        .foregroundStyle(resolver.isEligible(app) ? .primary : .secondary)
 
-                    Picker("Rule", selection: Binding(
+                    Picker("\(app.localizedName) rule", selection: Binding(
                         get: { controller.inclusionState(for: app.bundleIdentifier) },
                         set: { controller.setInclusionState($0, for: app.bundleIdentifier) }
                     )) {
@@ -159,12 +163,18 @@ struct GeneralSettingsView: View {
             Section {
                 LabeledContent("Accessibility") {
                     if controller.isAccessibilityGranted {
-                        Label("Granted", systemImage: "checkmark.circle.fill")
-                            .foregroundStyle(.green)
+                        Label {
+                            Text("Granted")
+                        } icon: {
+                            Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
+                        }
                     } else {
                         HStack {
-                            Label("Not granted", systemImage: "exclamationmark.triangle.fill")
-                                .foregroundStyle(.orange)
+                            Label {
+                                Text("Not granted")
+                            } icon: {
+                                Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+                            }
                             Button("Grant Access…") {
                                 controller.grantAccessibility()
                             }
