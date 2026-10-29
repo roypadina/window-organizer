@@ -16,10 +16,6 @@ private struct FakePermissions: PermissionsHelping {
     func requestAccessibilityPermissionPrompt() {}
 }
 
-private struct FakeLoginItem: LoginItemManaging {
-    func setEnabled(_ enabled: Bool) throws {}
-}
-
 /// Dev-only: renders README screenshots offscreen. Skipped unless RENDER_SCREENSHOTS=<output dir>.
 /// Usage: RENDER_SCREENSHOTS=$PWD/docs/screenshots swift test --filter ScreenshotRenderTests
 @MainActor
@@ -33,7 +29,6 @@ final class ScreenshotRenderTests: XCTestCase {
         win.contentView = host
         host.layoutSubtreeIfNeeded()
         RunLoop.main.run(until: Date().addingTimeInterval(0.5))
-        // 2x, with the tab strip cropped off (its selected label does not render offscreen).
         let scale = 2
         let rep = try XCTUnwrap(NSBitmapImageRep(
             bitmapDataPlanes: nil, pixelsWide: Int(size.width) * scale, pixelsHigh: Int(size.height) * scale,
@@ -41,10 +36,7 @@ final class ScreenshotRenderTests: XCTestCase {
             colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0))
         rep.size = size
         host.cacheDisplay(in: host.bounds, to: rep)
-        let strip = 46 * scale
-        let cg = try XCTUnwrap(rep.cgImage)
-        let crop = try XCTUnwrap(cg.cropping(to: CGRect(x: 0, y: strip, width: cg.width, height: cg.height - strip)))
-        let png = try XCTUnwrap(NSBitmapImageRep(cgImage: crop).representation(using: .png, properties: [:]))
+        let png = try XCTUnwrap(rep.representation(using: .png, properties: [:]))
         try png.write(to: URL(fileURLWithPath: dir).appendingPathComponent(name))
     }
 
@@ -55,11 +47,10 @@ final class ScreenshotRenderTests: XCTestCase {
         let controller = AppController(
             preferencesStore: MemoryStore(),
             permissionsHelper: FakePermissions(),
-            loginItemManager: FakeLoginItem(),
             registersShortcuts: false
         )
-        for (tab, name) in [(SettingsView.Tab.shortcuts, "settings-shortcuts.png")] {
-            try render(SettingsView(controller: controller, tab: tab), name: name, dir: dir)
-        }
+        try render(
+            ShortcutsSettingsView(controller: controller).frame(width: SettingsLayoutMetrics.windowWidth, height: 320),
+            name: "settings-shortcuts.png", dir: dir)
     }
 }

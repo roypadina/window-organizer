@@ -1,37 +1,7 @@
 import SwiftUI
 import WindowOrganizerCore
 
-struct SettingsView: View {
-    @ObservedObject var controller: AppController
-    @State private var tab: Tab
-
-    enum Tab: Hashable { case shortcuts, behavior, apps, general }
-
-    init(controller: AppController, tab: Tab = .shortcuts) {
-        self.controller = controller
-        _tab = State(initialValue: tab)
-    }
-
-    var body: some View {
-        TabView(selection: $tab) {
-            ShortcutsSettingsView(controller: controller)
-                .tabItem { Label("Shortcuts", systemImage: "keyboard") }
-                .tag(Tab.shortcuts)
-            BehaviorSettingsView(preferences: $controller.preferences)
-                .tabItem { Label("Behavior", systemImage: "slider.horizontal.3") }
-                .tag(Tab.behavior)
-            AppsSettingsView(controller: controller)
-                .tabItem { Label("Apps", systemImage: "macwindow.on.rectangle") }
-                .tag(Tab.apps)
-            GeneralSettingsView(controller: controller)
-                .tabItem { Label("General", systemImage: "gearshape") }
-                .tag(Tab.general)
-        }
-        .frame(width: SettingsLayoutMetrics.windowWidth)
-    }
-}
-
-private struct ShortcutsSettingsView: View {
+struct ShortcutsSettingsView: View {
     @ObservedObject var controller: AppController
     @State private var hint: String?
 
@@ -55,10 +25,13 @@ private struct ShortcutsSettingsView: View {
             } footer: {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(hint ?? "Click a shortcut and press the new keys. Esc cancels, Delete removes it.")
-                        .foregroundStyle(hint == nil ? Color.secondary : Color.red)
+                        .foregroundStyle(hint == nil ? Color.secondary : Color.primary)
                     if !controller.unavailableShortcuts.isEmpty {
-                        Text("⚠︎ marks a shortcut another app already uses; it won't work until you change it.")
-                            .foregroundStyle(.orange)
+                        Label {
+                            Text("marks a shortcut another app already uses; it won't work until you change it.")
+                        } icon: {
+                            Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+                        }
                     }
                 }
             }
@@ -74,13 +47,13 @@ private struct ShortcutsSettingsView: View {
     }
 }
 
-private struct BehaviorSettingsView: View {
-    @Binding var preferences: OrganizerPreferences
+struct BehaviorSettingsView: View {
+    @ObservedObject var controller: AppController
 
     var body: some View {
         Form {
             Section {
-                Picker("Action scope", selection: $preferences.scope) {
+                Picker("Action scope", selection: $controller.preferences.scope) {
                     ForEach(ActionScope.allCases) { scope in
                         Text(scope.title).tag(scope)
                     }
@@ -95,7 +68,7 @@ private struct BehaviorSettingsView: View {
     }
 }
 
-private struct AppsSettingsView: View {
+struct AppsSettingsView: View {
     @ObservedObject var controller: AppController
     @State private var filter = AppListFilter()
 
@@ -132,6 +105,7 @@ private struct AppsSettingsView: View {
                         ?? NSWorkspace.shared.icon(for: .application))
                         .resizable()
                         .frame(width: 20, height: 20)
+                        .accessibilityHidden(true)
 
                     VStack(alignment: .leading) {
                         Text(app.localizedName)
@@ -144,9 +118,9 @@ private struct AppsSettingsView: View {
 
                     Text(resolver.isEligible(app) ? "Targeted" : "Skipped")
                         .font(.caption)
-                        .foregroundStyle(resolver.isEligible(app) ? .green : .secondary)
+                        .foregroundStyle(resolver.isEligible(app) ? .primary : .secondary)
 
-                    Picker("Rule", selection: Binding(
+                    Picker("\(app.localizedName) rule", selection: Binding(
                         get: { controller.inclusionState(for: app.bundleIdentifier) },
                         set: { controller.setInclusionState($0, for: app.bundleIdentifier) }
                     )) {
@@ -177,24 +151,30 @@ private struct AppsSettingsView: View {
     }
 }
 
-private struct GeneralSettingsView: View {
+struct GeneralSettingsView: View {
     @ObservedObject var controller: AppController
 
     var body: some View {
         Form {
             Section("Startup") {
-                Toggle("Launch at Login", isOn: $controller.preferences.launchAtLoginEnabled)
+                LaunchAtLoginToggle()
             }
 
             Section {
                 LabeledContent("Accessibility") {
                     if controller.isAccessibilityGranted {
-                        Label("Granted", systemImage: "checkmark.circle.fill")
-                            .foregroundStyle(.green)
+                        Label {
+                            Text("Granted")
+                        } icon: {
+                            Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
+                        }
                     } else {
                         HStack {
-                            Label("Not granted", systemImage: "exclamationmark.triangle.fill")
-                                .foregroundStyle(.orange)
+                            Label {
+                                Text("Not granted")
+                            } icon: {
+                                Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+                            }
                             Button("Grant Access…") {
                                 controller.grantAccessibility()
                             }
@@ -228,10 +208,11 @@ private struct GeneralSettingsView: View {
                 }
                 HStack {
                     Button("About Window Organizer…") { AboutWindow.show() }
+                    Button("Welcome Guide…") { WelcomeWindow.show() }
                     Button("Support on Ko-fi ☕") {
                         NSWorkspace.shared.open(WindowOrganizerApp.koFiURL)
                     }
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(.bordered)
                 }
             }
         }

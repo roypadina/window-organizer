@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-30
+
+### Added
+- Welcome window on first launch, and "Welcome Guide…" in Settings > General: what the app does, your current shortcuts, the Accessibility step and how to reach Settings when the menu bar icon is hidden.
+- The menu shows "Grant Accessibility Access…" while Minimize and Close cannot work yet; a blocked Minimize or Close opens the Accessibility pane.
+- The menu shows your recorded shortcuts next to each action.
+- Opening Window Organizer again from Applications or Raycast opens Settings.
+
+### Changed
+- Settings and About open in front with the menu bar and Dock icon while they are open, and close with ⌘W.
+- Settings has its own window with a toolbar of tabs and remembers the last tab.
+- Quit Window Organizer is ⌘Q; the wrong ⌘M, ⌘W and ⌘Q hints on the bulk actions are gone.
+- The Force Quit confirmation appears in front of other apps.
+- Settings status and hint text is easier to read; colour stays on the icons.
+
+### Fixed
+- Open at Login shows the real system state and no longer re-adds a login item you removed in System Settings.
+- VoiceOver: the remove-shortcut button, recorders and per-app rule pop-ups have proper labels.
+
 ## [0.2.4] - 2026-10-23
 
 ### Added

@@ -24,23 +24,25 @@ struct ShortcutRecorder: View {
                     .frame(minWidth: 120)
             }
             .buttonStyle(.bordered)
+            .accessibilityLabel("\(action.title) shortcut")
+            .accessibilityValue(label)
             .overlay {
                 if isRecording {
                     RoundedRectangle(cornerRadius: 6).strokeBorder(Color.accentColor, lineWidth: 2)
                 }
             }
 
-            Button {
+            Button("Remove Shortcut", systemImage: "xmark.circle.fill") {
                 stop()
                 controller.preferences.shortcuts[action] = nil
-            } label: {
-                Image(systemName: "xmark.circle.fill")
-                    .foregroundStyle(.secondary)
             }
+            .labelStyle(.iconOnly)
+            .foregroundStyle(.secondary)
             .buttonStyle(.borderless)
             .help("Remove shortcut")
             .opacity(shortcut == nil || isRecording ? 0 : 1)
             .disabled(shortcut == nil || isRecording)
+            .accessibilityHidden(shortcut == nil || isRecording)
         }
         .onChange(of: isRecording) { _, recording in
             // Another recorder took over: drop this one's monitor.
