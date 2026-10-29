@@ -150,6 +150,7 @@ Free, open-source Mac menu-bar apps and terminal tools, all on one site: **[apps
 - [SmartHiddenBar](https://apps.roypadina.synology.me/apps/smarthiddenbar/) — Hide the menu bar clutter. Reach it in one click.
 - [VaultBar](https://apps.roypadina.synology.me/apps/vaultbar/) — Your encrypted vaults, one click from the menu bar.
 - [MeetAlert](https://apps.roypadina.synology.me/apps/meetalert/) — Meeting alerts you can't miss: a popup that stays, a phone push that escalates.
+- [PullPing](https://apps.roypadina.synology.me/apps/pullping/) — Know when your pull requests need you, across every GitHub account.
 
 ## Support
 
