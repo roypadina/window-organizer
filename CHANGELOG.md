@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-30
+
 ### Added
 - Welcome window on first launch, and "Welcome Guide…" in Settings > General: what the app does, your current shortcuts, the Accessibility step and how to reach Settings when the menu bar icon is hidden.
 - The menu shows "Grant Accessibility Access…" while Minimize and Close cannot work yet; a blocked Minimize or Close opens the Accessibility pane.

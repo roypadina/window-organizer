@@ -46,7 +46,11 @@ brew install --cask roypadina/tap/window-organizer
   Search the running apps and filter by kind (Dock, menu bar, background), developer (Apple or
   third-party) and status (targeted, skipped, has a rule).
 - **Action scope** — the windows on the current Space and displays (default), or all Spaces and displays.
-- **Open at Login**, and no Dock icon: it lives in the menu bar only.
+- **Open at Login**, with the real system state shown in Settings. Window Organizer lives in the menu bar and has no Dock
+  icon, except while Settings or About is open.
+- **Welcome window** on first launch (and **Welcome Guide…** in Settings → General): what the app does, your shortcuts, the
+  Accessibility step, and how to reach Settings if the menu bar icon is hidden. Open Window Organizer again from Applications or
+  Raycast to get Settings.
 
 ## Requirements
 
@@ -73,9 +77,9 @@ unzip it and move `Window Organizer.app` to `/Applications`.
 
 Minimize and close use the macOS Accessibility API, so they need permission (quit and force quit do not):
 
-1. Click the Window Organizer menu bar icon → **Settings…** → **General**.
-2. Click **Grant Access…** next to Accessibility.
-3. Turn on **Window Organizer** in System Settings → Privacy & Security → Accessibility.
+1. Click the Window Organizer menu bar icon → **Grant Accessibility Access…** (shown until access is granted; a blocked Minimize
+   or Close opens the same pane). Or use **Settings…** → **General** → **Grant Access…**.
+2. Turn on **Window Organizer** in System Settings → Privacy & Security → Accessibility.
 
 Since 0.2.0 releases are signed with the same certificate, so the grant survives updates.
 Upgrading from 0.1.0, or still asked for access although it's on? Reset it once and grant again:
@@ -94,7 +98,7 @@ tccutil reset Accessibility com.padina.window-organizer
 | `⌃⌥⌘⇧Q` | Force quit apps (asks first) |
 
 Change them in **Settings… → Shortcuts**: click a shortcut and press the new keys (any key with ⌘, ⌃ or ⌥; F-keys work alone). Esc cancels, Delete removes it.
-The same actions are in the menu bar menu.
+The menu bar menu has the same actions and shows your shortcuts next to them. **Settings…** is ⌘, and **Quit Window Organizer** is ⌘Q while the menu is open.
 
 ## Limitations
 
