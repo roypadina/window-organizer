@@ -23,6 +23,10 @@ all your open apps and windows at once, from global shortcuts. It is not an app 
 
 <br>
 
+<img src="docs/demo.gif" alt="Window Organizer demo: minimize every open window in one go from the menu bar menu or with the global shortcut Control-Option-Command-M" width="720">
+
+<br>
+
 ```bash
 brew install --cask roypadina/tap/window-organizer
 ```
