@@ -17,13 +17,18 @@ let package = Package(
             targets: ["WindowOrganizerApp"]
         )
     ],
+    dependencies: [
+        .package(url: "https://github.com/sparkle-project/Sparkle", from: "2.10.0")
+    ],
     targets: [
         .target(
             name: "WindowOrganizerCore"
         ),
         .executableTarget(
             name: "WindowOrganizerApp",
-            dependencies: ["WindowOrganizerCore"]
+            dependencies: ["WindowOrganizerCore", .product(name: "Sparkle", package: "Sparkle")],
+            // Sparkle.framework is embedded in Contents/Frameworks (Scripts/package_app.sh).
+            linkerSettings: [.unsafeFlags(["-Xlinker", "-rpath", "-Xlinker", "@executable_path/../Frameworks"])]
         ),
         .testTarget(
             name: "WindowOrganizerCoreTests",
