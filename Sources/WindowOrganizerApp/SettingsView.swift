@@ -204,6 +204,7 @@ struct GeneralSettingsView: View {
                         Text("Window Organizer").font(.headline)
                         Text("Version " + (Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "dev"))
                             .foregroundStyle(.secondary)
+                        Button("Check for Updates…") { Updates.check() }
                     }
                 }
                 HStack {

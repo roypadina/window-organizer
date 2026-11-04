@@ -115,7 +115,14 @@ The menu bar menu has the same actions and shows your shortcuts next to them. **
 
 ## Privacy
 
-No network access, no analytics. Preferences are stored in the defaults domain `com.padina.window-organizer`.
+No analytics. The only network access is the update check: Window Organizer asks once (on its second launch) whether to check for updates automatically; with your yes it checks once a day by downloading the release feed from GitHub, which sends nothing about you. Preferences are stored in the defaults domain `com.padina.window-organizer`.
+
+## Updating
+
+Window Organizer asks once whether to check for updates automatically; with your yes it checks once a day and asks
+before installing a new version (**Check for Updates…** in the About window or Settings → About checks now). An in-app
+update needs no `xattr` step and keeps the Accessibility grant. Homebrew users can also run
+`brew upgrade --cask window-organizer`.
 
 ## Build from source
 

@@ -26,6 +26,9 @@ rm -rf "$APP_DIR"
 mkdir -p "$MACOS_DIR" "$RESOURCES_DIR"
 
 cp "$BIN_DIR/WindowOrganizerApp" "$MACOS_DIR/$APP_NAME"
+# Sparkle (in-app updates): the framework SwiftPM puts next to the binary; ditto keeps its symlinks.
+mkdir -p "$CONTENTS_DIR/Frameworks"
+ditto "$BIN_DIR/Sparkle.framework" "$CONTENTS_DIR/Frameworks/Sparkle.framework"
 cp Assets/icons/AppIcon.icns Assets/icons/menubar.png Assets/icons/menubar@2x.png "$RESOURCES_DIR/"
 
 cat > "$CONTENTS_DIR/Info.plist" <<PLIST
@@ -46,13 +49,19 @@ cat > "$CONTENTS_DIR/Info.plist" <<PLIST
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
-    <string>0.3.0</string>
+    <string>0.4.0</string>
     <key>CFBundleVersion</key>
-    <string>6</string>
+    <string>7</string>
     <key>LSMinimumSystemVersion</key>
     <string>14.0</string>
     <key>LSUIElement</key>
     <true/>
+    <!-- Sparkle updates: the feed is the appcast.xml asset of the latest GitHub release. No
+         SUEnableAutomaticChecks on purpose: Sparkle asks once, since the app makes no network calls unasked. -->
+    <key>SUFeedURL</key>
+    <string>https://github.com/roypadina/window-organizer/releases/latest/download/appcast.xml</string>
+    <key>SUPublicEDKey</key>
+    <string>qq4oZAVmJanKJ1bTAzGSO94WWX6cx+/5kCjBZxJXEm0=</string>
     <key>NSHumanReadableCopyright</key>
     <string>Copyright © 2026 Padina</string>
 </dict>
@@ -68,19 +77,44 @@ if [[ -z "$SIGNING_IDENTITY" ]]; then
     )"
 fi
 
-if [[ -n "$SIGNING_IDENTITY" ]]; then
-    codesign --force --deep --sign "$SIGNING_IDENTITY" --identifier "$BUNDLE_ID" "$APP_DIR"
-else
+if [[ -z "$SIGNING_IDENTITY" ]]; then
     echo "warning: no code-signing identity found; falling back to ad hoc signing" >&2
     echo "warning: macOS Accessibility permission may reset after rebuilds" >&2
-    codesign --force --deep --sign - --identifier "$BUNDLE_ID" "$APP_DIR"
+    SIGNING_IDENTITY="-"
 fi
+# Inside-out, not --deep: --deep --identifier would stamp the app's identifier on Sparkle's helpers.
+find "$CONTENTS_DIR" -depth \( -name '*.framework' -o -name '*.xpc' -o -name '*.app' -o -name '*.dylib' \
+    -o \( -name Autoupdate -type f \) \) | while read -r nested; do
+    codesign --force --preserve-metadata=identifier,entitlements,flags --sign "$SIGNING_IDENTITY" "$nested"
+done
+codesign --force --sign "$SIGNING_IDENTITY" --identifier "$BUNDLE_ID" "$APP_DIR"
+codesign --verify --deep --strict "$APP_DIR"
 
 if [[ -n "$RELEASE" ]]; then
     ZIP="$DIST_DIR/Window-Organizer.zip"
     rm -f "$ZIP"
     ditto -c -k --norsrc --noextattr --keepParent "$APP_DIR" "$ZIP"
     shasum -a 256 "$ZIP"
+
+    # Sparkle feed for this release only (uploaded next to the zip; the app reads the latest release's
+    # appcast.xml). Only with the key whose public half the app ships; any other key makes a feed every
+    # copy refuses.
+    SPARKLE=.build/artifacts/sparkle/Sparkle/bin
+    if [[ "$("$SPARKLE/generate_keys" -p 2>/dev/null || true)" == "$(/usr/libexec/PlistBuddy -c 'Print SUPublicEDKey' "$CONTENTS_DIR/Info.plist")" ]]; then
+        VER=$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' "$CONTENTS_DIR/Info.plist")
+        FEED_DIR=$(mktemp -d)
+        cp "$ZIP" "$FEED_DIR/"
+        # This version's CHANGELOG section becomes the update prompt's release notes.
+        awk -v v="## [$VER]" 'index($0, v) == 1 {f=1; next} /^## \[/ {f=0} f' CHANGELOG.md > "$FEED_DIR/Window-Organizer.md"
+        rm -f "$DIST_DIR/appcast.xml"  # generate_appcast merges into an existing file
+        "$SPARKLE/generate_appcast" --embed-release-notes \
+            --download-url-prefix "https://github.com/roypadina/window-organizer/releases/download/v$VER/" \
+            -o "$DIST_DIR/appcast.xml" "$FEED_DIR"
+        rm -rf "$FEED_DIR"
+        echo "$DIST_DIR/appcast.xml"
+    else
+        echo "Sparkle signing key (matching SUPublicEDKey) not in the keychain: no appcast.xml"
+    fi
 fi
 
 echo "$APP_DIR"
