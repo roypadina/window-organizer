@@ -53,6 +53,8 @@ private struct MenuContent: View {
 
         Divider()
 
+        Button(Updates.menuTitle) { Updates.check() }
+
         Button("Settings…") { SettingsWindow.shared.show() }.keyboardShortcut(",")
 
         Divider()
