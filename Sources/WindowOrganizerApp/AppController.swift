@@ -222,7 +222,8 @@ final class AppController: ObservableObject {
         alert.alertStyle = .critical
         alert.addButton(withTitle: "Force Quit")
         alert.addButton(withTitle: "Cancel")
-        NSApp.activate()  // inactive .accessory app, usually right after a global hotkey: show the alert in front
+        // Forceful: hotkey or menu (user action); on macOS 14+ the front app can refuse activate() (alert behind).
+        NSApp.activate(ignoringOtherApps: true)  // inactive .accessory app, usually right after a global hotkey: show the alert in front
         return alert.runModal() == .alertFirstButtonReturn
     }
 }
