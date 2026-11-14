@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-14
+
+### Added
+- Ko-fi support card: about 3 seconds after a bulk action (minimize, close or quit, from the menu or a shortcut) that changed something, a small receipt card may ask for a tip. It waits until 7 days after you install or update to this version, and until you have done more than 20 bulk actions that changed something. It asks at most 3 times a year, and never during the Welcome window, a dialog, shortcut recording, while the microphone is in use or while you are away. "Ask me in 2 weeks" snoozes it. "Nope, don't ask again" keeps it quiet until the next major version, and for at least 90 days. A card still open when you start the next bulk action closes and counts as a snooze; one left unanswered fades after 5 minutes and counts as a snooze too. The card never takes keyboard focus, and the same three choices are in the menu for keyboard and VoiceOver users. Hold ⌥ in the menu for "Show Support Prompt Now" to preview it (macOS 15 or later).
+
+### Changed
+- Minimize all windows skips windows that are already minimized and no longer counts them.
+
 ## [0.4.1] - 2026-11-04
 
 ### Added

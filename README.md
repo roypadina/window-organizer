@@ -171,6 +171,8 @@ Free, open-source Mac menu-bar apps and terminal tools, all on one site: **[apps
 
 If Window Organizer clears your desktop in one keystroke, you can support its development — it's optional and always appreciated.
 
+Once in a while, Window Organizer asks too. A small receipt card shows up a few seconds after you minimize, close or quit apps. It only appears after you have done more than 20 clean-ups with it, and at most 3 times a year. "Ask me in 2 weeks" snoozes it, and "Nope, don't ask again" keeps it away until the next major version. If you start another bulk action while the card is still open, or leave it unanswered for 5 minutes, it closes and counts as a snooze. It never takes keyboard focus.
+
 [![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/roypadina)
 
 A ⭐ on the repo helps just as much.
