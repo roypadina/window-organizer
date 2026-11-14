@@ -53,6 +53,11 @@ final class WindowActionEngine {
 
     private func setWindowsMinimized(_ minimized: Bool, for app: NSRunningApplication, scope: ActionScope) -> Int {
         windows(for: app, scope: scope).reduce(0) { count, window in
+            var current: CFTypeRef?  // already in that state: nothing to do, nothing to count
+            if AXUIElementCopyAttributeValue(window, kAXMinimizedAttribute as CFString, &current) == .success,
+               current as? Bool == minimized {
+                return count
+            }
             let result = AXUIElementSetAttributeValue(window, kAXMinimizedAttribute as CFString, minimized as CFBoolean)
             return result == .success ? count + 1 : count
         }

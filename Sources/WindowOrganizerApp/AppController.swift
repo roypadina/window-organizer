@@ -23,12 +23,14 @@ final class AppController: ObservableObject {
     /// Actions whose shortcut macOS refused, usually because another app already owns it.
     @Published private(set) var unavailableShortcuts: Set<OrganizerAction> = []
     @Published var statusMessage: String = "Ready"
+    @Published private(set) var supportPromptShowing = false  // mirrored in the menu: the card never takes keyboard focus
 
     private let preferencesStore: PreferencesPersisting
     private let permissionsHelper: PermissionsHelping
     private let actionEngine: WindowActionEngine
     private var shortcutManager: GlobalShortcutManager?
     private var workspaceObservers: [NSObjectProtocol] = []
+    private var supportPromptTask: Task<Void, Never>?  // the pending ~3 s try after the last clean-up
 
     init(
         preferencesStore: PreferencesPersisting = UserDefaultsPreferencesStore(),
@@ -67,6 +69,9 @@ final class AppController: ObservableObject {
     }
 
     func perform(_ action: OrganizerAction) {
+        // A support card still unanswered when the next bulk action starts counts as "Ask me in 2 weeks".
+        if supportPromptShowing { SupportPanel.respond(.snooze); SupportPanel.close() }
+        supportPromptTask?.cancel()  // mid-action again: the wait restarts after this one
         refreshPermissions()
 
         let policy = ActionPolicy(preferences: preferences)
@@ -85,6 +90,70 @@ final class AppController: ObservableObject {
 
         let result = actionEngine.perform(action, preferences: preferences)
         statusMessage = result.statusMessage
+        countCleanUp(result)
+    }
+
+    // MARK: Ko-fi support card (UserDefaults; counting starts with the version that ships the card)
+
+    static let supportInstallDateKey = "supportInstallDate"
+    private static let bulkActionsKey = "supportBulkActions"
+    private static let windowsTidiedKey = "supportWindowsTidied"
+    private static let supportPromptKey = "supportPrompt"
+    static var appVersion: String { Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0" }
+
+    private var supportPrompt: SupportPromptState {
+        get {
+            UserDefaults.standard.data(forKey: Self.supportPromptKey)
+                .flatMap { try? JSONDecoder().decode(SupportPromptState.self, from: $0) } ?? SupportPromptState()
+        }
+        set { UserDefaults.standard.set(try? JSONEncoder().encode(newValue), forKey: Self.supportPromptKey) }
+    }
+
+    /// The success moment: a bulk action that changed something. Counted, then (not after force quit) the card gets one try ~3 s later.
+    private func countCleanUp(_ result: ActionResult) {
+        guard result.affectedCount > 0 else { return }
+        let defaults = UserDefaults.standard
+        defaults.set(defaults.integer(forKey: Self.bulkActionsKey) + 1, forKey: Self.bulkActionsKey)
+        if result.action == .minimizeAllWindows || result.action == .closeAllWindows {  // counts windows; quit counts apps
+            defaults.set(defaults.integer(forKey: Self.windowsTidiedKey) + result.affectedCount, forKey: Self.windowsTidiedKey)
+        }
+        guard result.action != .forceQuitApps else { return }  // counted, but never ask right after a force quit
+        supportPromptTask = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(3))
+            guard !Task.isCancelled else { return }
+            self?.maybeShowSupportPrompt()
+        }
+    }
+
+    /// One try per clean-up; a guard that fails drops this chance, the next clean-up tries again.
+    private func maybeShowSupportPrompt(now: Date = Date()) {
+        // Not now: Welcome on screen, a dialog or shortcut recording in progress, nobody at the desk, or a call.
+        let idleSeconds = CGEventSource.secondsSinceLastEventType(.hidSystemState, eventType: CGEventType(rawValue: ~0)!)
+        guard !supportPromptShowing, !WelcomeWindow.isShowing, NSApp.modalWindow == nil, recordingAction == nil,
+              idleSeconds <= 120, !SupportPanel.micInUse(),
+              let installDate = UserDefaults.standard.object(forKey: Self.supportInstallDateKey) as? Date,
+              supportPrompt.mayAsk(now: now, installDate: installDate,
+                                   bulkActions: UserDefaults.standard.integer(forKey: Self.bulkActionsKey),
+                                   appVersion: Self.appVersion)
+        else { return }
+        supportPrompt.recordShown(now)
+        presentSupportPrompt()
+    }
+
+    /// `record: false` = the ⌥ menu preview: shows the real card but never touches the ask bookkeeping.
+    func presentSupportPrompt(record: Bool = true) {
+        guard !supportPromptShowing else { return }
+        supportPromptShowing = true
+        SupportPanel.show(bulkActions: UserDefaults.standard.integer(forKey: Self.bulkActionsKey),
+                          windowsTidied: UserDefaults.standard.integer(forKey: Self.windowsTidiedKey),
+                          onAnswer: { [weak self] answer in self?.answerSupportPrompt(answer, record: record) },
+                          onClosed: { [weak self] in self?.supportPromptShowing = false })
+    }
+
+    private func answerSupportPrompt(_ answer: SupportPromptState.Answer, record: Bool) {
+        if answer == .support { NSWorkspace.shared.open(WindowOrganizerApp.koFiURL) }
+        guard record else { return }
+        supportPrompt.record(answer, now: Date(), appVersion: Self.appVersion)
     }
 
     func refreshPermissions() {

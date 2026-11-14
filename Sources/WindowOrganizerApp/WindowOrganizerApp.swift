@@ -41,6 +41,16 @@ private struct MenuContent: View {
             Divider()
         }
 
+        if controller.supportPromptShowing {  // the receipt card is mouse-only; same three answers here
+            Section("Support Window Organizer") {
+                Button("Tip a Coffee on Ko-fi ☕") { SupportPanel.respond(.support); SupportPanel.close() }
+                Button("Ask Me in 2 Weeks") { SupportPanel.respond(.snooze); SupportPanel.close() }
+                Button("Don't Ask Again") { SupportPanel.respond(.never); SupportPanel.close() }
+            }
+
+            Divider()
+        }
+
         actionButton(.minimizeAllWindows)
         actionButton(.closeAllWindows)
         actionButton(.quitApps)
@@ -63,8 +73,17 @@ private struct MenuContent: View {
             AboutWindow.show()
         }
 
-        Button("Support on Ko-fi ☕") {
-            NSWorkspace.shared.open(WindowOrganizerApp.koFiURL)
+        if #available(macOS 15, *) {  // hold ⌥: preview the support card without recording an ask
+            Button("Support on Ko-fi ☕") {
+                NSWorkspace.shared.open(WindowOrganizerApp.koFiURL)
+            }
+            .modifierKeyAlternate(.option) {
+                Button("Show Support Prompt Now") { controller.presentSupportPrompt(record: false) }
+            }
+        } else {
+            Button("Support on Ko-fi ☕") {
+                NSWorkspace.shared.open(WindowOrganizerApp.koFiURL)
+            }
         }
 
         Button("Quit Window Organizer") {
@@ -113,6 +132,10 @@ extension WindowOrganizerApp {
 final class AppDelegate: NSObject, NSApplicationDelegate {
     @MainActor func applicationDidFinishLaunching(_ notification: Notification) {
         NSApplication.shared.setActivationPolicy(.accessory)
+        // Ko-fi card: its first-ask clock starts at the first launch of the version that ships it.
+        if UserDefaults.standard.object(forKey: AppController.supportInstallDateKey) == nil {
+            UserDefaults.standard.set(Date(), forKey: AppController.supportInstallDateKey)
+        }
         // Sparkle asks on the second launch before any check; never in test runs or a bare `swift run`.
         if ProcessInfo.processInfo.environment["WINDOW_ORGANIZER_TEST"] != "1", Bundle.main.bundleIdentifier != nil {
             _ = Updates.controller

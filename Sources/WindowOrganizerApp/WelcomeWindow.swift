@@ -7,6 +7,7 @@ import WindowOrganizerCore
 @MainActor
 enum WelcomeWindow {
     private static var window: NSWindow?
+    static var isShowing: Bool { window?.isVisible == true }  // the support card waits while it is up
 
     static func show() {
         guard let controller = SettingsWindow.shared.controller else { return }
